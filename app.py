@@ -13,11 +13,11 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 .stApp { background: #08080a; color: #e0e0e0; font-family: 'JetBrains Mono', monospace; }
 .glass { background: rgba(22,22,26,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.15); border-radius: 16px; padding: 18px; }
-.kpi { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 16px; padding: 18px; border: 1px solid #222; border-top: 1px solid rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,215,0,0.2); transition: all 0.3s; }
+.kpi { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 16px; padding: 18px; border: 1px solid #222; border-top: 1px solid rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,2[...]
 .kpi:hover { transform: scale(1.02); }
 .kpi-val { font-size: 24px; font-weight: 800; color: white; }
 .kpi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; }
-.gold-text { background: linear-gradient(90deg,#FFD700,#FFA500,#FFD700); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 6s linear infinite; }
+.gold-text { background: linear-gradient(90deg,#FFD700,#FFA500,#FFD700); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 6s linear[...]
 @keyframes shine { 0% { background-position: 0% } 100% { background-position: 200% } }
 .buy-signal { background: linear-gradient(135deg, #00c853, #00e676); color: black; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 22px; }
 .sell-signal { background: linear-gradient(135deg, #ff1744, #ff5252); color: white; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 22px; }
@@ -26,6 +26,7 @@ st.markdown("""
 .conf-high { background: linear-gradient(90deg,#00c853,#00e676); color:black; padding:8px 14px; border-radius:20px; font-weight:900; }
 .conf-mid { background: #333; color:#FFD700; padding:8px 14px; border-radius:20px; font-weight:900; border:1px solid #FFD700; }
 .conf-low { background: #222; color:#888; padding:8px 14px; border-radius:20px; }
+.conf-verylow { background: #1a0a0a; color:#ff5252; padding:8px 14px; border-radius:20px; border:1px solid #ff5252; }
 .stButton>button { background: linear-gradient(90deg,#D4AF37,#FFD700); color: black; font-weight: 900; height: 54px; border-radius: 12px; width: 100%; border: none; }
 #MainMenu, footer, header {visibility:hidden;}
 </style>
@@ -105,6 +106,34 @@ def send_alert(msg):
         except:
             pass
 
+def get_conf_label(conf):
+    """Generate confidence label with enhanced styling"""
+    if conf >= 85:
+        return f'<span class="conf-high">⚡ CONF {conf}% ELITE 🇿🇦</span>'
+    elif conf >= 75:
+        return f'<span class="conf-high">✅ CONF {conf}% HIGH 🇿🇦</span>'
+    elif conf >= 60:
+        return f'<span class="conf-mid">⚠️ CONF {conf}% MED</span>'
+    elif conf >= 50:
+        return f'<span class="conf-mid">🟡 CONF {conf}% FAIR</span>'
+    elif conf >= 30:
+        return f'<span class="conf-low">❓ CONF {conf}% LOW</span>'
+    else:
+        return f'<span class="conf-verylow">🔴 CONF {conf}% DANGER</span>'
+
+def get_conf_breakdown(conf, base, eur_add, eur_mom, zar_add, zar_mom, vol_adj):
+    """Detailed confidence breakdown for debugging"""
+    return f"""
+    <div style="background:#0a0a0c;border:1px solid #333;border-radius:8px;padding:10px;font-size:11px;margin-top:8px;">
+    <div style="color:#FFD700;margin-bottom:5px;">📊 CONF BREAKDOWN:</div>
+    <div>🥇 Base Setup: +{base}%</div>
+    <div>🇪🇺 EUR Signal: +{eur_add}% | Momentum: +{eur_mom}%</div>
+    <div>🇿🇦 ZAR Signal: +{zar_add}% | Momentum: +{zar_mom}%</div>
+    <div>🌪️ Volatility Adj: +{vol_adj:.1f}%</div>
+    <div style="border-top:1px solid #333;margin-top:5px;padding-top:5px;color:#00e676;font-weight:bold;">TOTAL: {conf}%</div>
+    </div>
+    """
+
 # DATA COLLECTION
 df_gold, price, atr, ema50, ema200, gold_rsi, gold_macd, gold_momentum, gold_volatility = get_gold()
 eur_price, eur_sig, eur20, eur100, eur_rsi, eur_atr, eur_momentum = get_forex("EURUSD=X")
@@ -136,29 +165,29 @@ session_ok = 10 <= now.hour < 20
 agree_buy = setup_bull and fund_bull and session_ok
 agree_sell = setup_bear and fund_bear and session_ok
 
-# SA CONFIDENCE - ENHANCED ZAR SELL = GOLD BUY
-conf = 0
-if agree_buy or agree_sell: conf+=50
-if eur_sig=="BUY" and agree_buy: conf+=15
-if eur_sig=="SELL" and agree_sell: conf+=15
-if eur_momentum > 0 and agree_buy: conf+=10
-if eur_momentum < 0 and agree_sell: conf+=10
-if zar_sig=="SELL" and agree_buy: conf+=15  # RAND STRONG = Dollar weak = Gold BUY
-if zar_sig=="BUY" and agree_sell: conf+=15  # RAND WEAK = Dollar strong = Gold SELL
-if zar_momentum < 0 and agree_buy: conf+=10
-if zar_momentum > 0 and agree_sell: conf+=10
+# SA CONFIDENCE - ENHANCED ZAR SELL = GOLD BUY WITH DETAILED BREAKDOWN
+base_conf = 50 if (agree_buy or agree_sell) else 0
 
-# Volatility adjustment
+eur_signal_bonus = 15 if ((eur_sig=="BUY" and agree_buy) or (eur_sig=="SELL" and agree_sell)) else 0
+eur_momentum_bonus = 10 if ((eur_momentum > 0 and agree_buy) or (eur_momentum < 0 and agree_sell)) else 0
+
+zar_signal_bonus = 15 if ((zar_sig=="SELL" and agree_buy) or (zar_sig=="BUY" and agree_sell)) else 0
+zar_momentum_bonus = 10 if ((zar_momentum < 0 and agree_buy) or (zar_momentum > 0 and agree_sell)) else 0
+
 vol_adjustment = min(gold_volatility / 5.0, 5)
-conf = min(int(conf + vol_adjustment), 100)
+conf = min(int(base_conf + eur_signal_bonus + eur_momentum_bonus + zar_signal_bonus + zar_momentum_bonus + vol_adjustment), 100)
 
-conf_label = f'<span class="conf-high">CONF {conf}% HIGH 🇿🇦</span>' if conf>=75 else f'<span class="conf-mid">CONF {conf}% MED</span>' if conf>=50 else f'<span class="conf-low">CONF {conf}% LOW</span>'
+# Enhanced confidence label with new function
+conf_label = get_conf_label(conf)
+conf_breakdown = get_conf_breakdown(conf, base_conf, eur_signal_bonus, eur_momentum_bonus, zar_signal_bonus, zar_momentum_bonus, vol_adjustment)
 
 left, right = st.columns([1.7,1])
 with left:
     tab1, tab2, tab3 = st.tabs(["⚔️ GOLD CORE", "🇪🇺 EURUSD", "🇿🇦 USDZAR - YOUR RAND"])
     with tab1:
         st.markdown(f'<div class="glass"> <div style="display:flex;justify-content:space-between;"><div class="kpi-label">SA SMART LOGIC</div><div>{conf_label}</div></div>', unsafe_allow_html=True)
+        st.markdown(conf_breakdown, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         html="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AXAUUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
         st.components.v1.html(html, height=380)
         st.markdown('</div>', unsafe_allow_html=True)
