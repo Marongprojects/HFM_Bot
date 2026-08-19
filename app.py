@@ -4,7 +4,7 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(page_title="STOIC TERMINAL v6.2", page_icon="⚔️", layout="wide")
+st.set_page_config(page_title="MARONG STOIC BOT", page_icon="⚔️", layout="wide")
 SAST = pytz.timezone("Africa/Johannesburg")
 st_autorefresh(interval=1000, key="clock")
 
@@ -63,7 +63,7 @@ now = datetime.now(SAST)
 
 st.markdown(f"""
 <div class="glass" style="display:flex;justify-content:space-between;align-items:center;">
-<div><span class="gold-text" style="font-size:22px;">⚔️ STOIC TERMINAL v6.2</span> <span style="color:#666;">| SHINE EDITION</span></div>
+<div><span class="gold-text" style="font-size:22px;">⚔️ MARONG STOIC BOT</span> <span style="color:#666;">| SHINE EDITION</span></div>
 <div style="text-align:right;"><span style="color:#FFD700;font-weight:700;">{now.strftime('%H:%M:%S')}</span> <span style="color:#666;">SAST</span><br><span style="font-size:11px;color:#00e676;">● LIVE</span></div>
 </div>
 """, unsafe_allow_html=True)
