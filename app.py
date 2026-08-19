@@ -13,11 +13,11 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 .stApp { background: #08080a; color: #e0e0e0; font-family: 'JetBrains Mono', monospace; }
 .glass { background: rgba(22,22,26,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.15); border-radius: 16px; padding: 18px; }
-.kpi { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 16px; padding: 18px; border: 1px solid #222; border-top: 1px solid rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,215,0,0.15); transition: transform 0.2s; }
+.kpi { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 16px; padding: 18px; border: 1px solid #222; border-top: 1px solid rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,215,0,0.2); transition: all 0.3s; }
 .kpi:hover { transform: scale(1.02); }
 .kpi-val { font-size: 24px; font-weight: 800; color: white; }
 .kpi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; }
-.gold-text { background: linear-gradient(90deg,#FFD700,#FFA500,#FFD700); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 6s linear infinite; font-weight: 900; }
+.gold-text { background: linear-gradient(90deg,#FFD700,#FFA500,#FFD700); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 6s linear infinite; }
 @keyframes shine { 0% { background-position: 0% } 100% { background-position: 200% } }
 .buy-signal { background: linear-gradient(135deg, #00c853, #00e676); color: black; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 22px; }
 .sell-signal { background: linear-gradient(135deg, #ff1744, #ff5252); color: white; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 22px; }
@@ -40,40 +40,76 @@ if datetime.now(SAST).date()!=st.session_state.last_reset:
 def get_gold():
     try:
         df=yf.Ticker("GC=F").history(period="5d", interval="15m")
-        price=float(df['Close'].iloc[-1]); atr=float((df['High']-df['Low']).rolling(14).mean().iloc[-1])
-        ema50=float(df['Close'].ewm(50).mean().iloc[-1]); ema200=float(df['Close'].ewm(200).mean().iloc[-1])
-        return df, price, atr, ema50, ema200
-    except: return None, 4407.0, 5.5, 4400.0, 4385.0
+        price=float(df['Close'].iloc[-1])
+        atr=float((df['High']-df['Low']).rolling(14).mean().iloc[-1])
+        ema50=float(df['Close'].ewm(50).mean().iloc[-1])
+        ema200=float(df['Close'].ewm(200).mean().iloc[-1])
+        rsi=float(100 - (100/(1 + (df['Close'].diff().clip(lower=0).rolling(14).mean() / df['Close'].diff().clip(upper=0).abs().rolling(14).mean()))))
+        macd_line = df['Close'].ewm(12).mean() - df['Close'].ewm(26).mean()
+        macd_signal = macd_line.ewm(9).mean()
+        macd = float(macd_line.iloc[-1] - macd_signal.iloc[-1])
+        momentum = float(df['Close'].iloc[-1] - df['Close'].iloc[-15])
+        volatility = float(df['Close'].rolling(20).std().iloc[-1])
+        return df, price, atr, ema50, ema200, rsi, macd, momentum, volatility
+    except:
+        return None, 4407.0, 5.5, 4400.0, 4385.0, 50.0, 0.0, 0.0, 5.0
 
 @st.cache_data(ttl=60)
 def get_forex(ticker, invert=False):
     try:
         df=yf.Ticker(ticker).history(period="5d", interval="15m")
-        price=float(df['Close'].iloc[-1]); ema20=float(df['Close'].ewm(20).mean().iloc[-1]); ema100=float(df['Close'].ewm(100).mean().iloc[-1])
-        sig = "BUY" if ema20>ema100 and price>ema20 else "SELL" if ema20<ema100 and price<ema20 else "WAIT"
-        return price, sig, ema20, ema100
-    except: 
+        price=float(df['Close'].iloc[-1])
+        ema20=float(df['Close'].ewm(20).mean().iloc[-1])
+        ema100=float(df['Close'].ewm(100).mean().iloc[-1])
+        ema50=float(df['Close'].ewm(50).mean().iloc[-1])
+        rsi=float(100 - (100/(1 + (df['Close'].diff().clip(lower=0).rolling(14).mean() / df['Close'].diff().clip(upper=0).abs().rolling(14).mean()))))
+        atr = float((df['High']-df['Low']).rolling(14).mean().iloc[-1])
+        momentum = float(df['Close'].iloc[-1] - df['Close'].iloc[-10])
+        
+        # Enhanced signal with momentum and volatility confirmation
+        trend_bull = ema20 > ema100 and price > ema20 and ema50 > ema100
+        trend_bear = ema20 < ema100 and price < ema20 and ema50 < ema100
+        momentum_bull = momentum > 0 and rsi < 70
+        momentum_bear = momentum < 0 and rsi > 30
+        
+        if trend_bull and momentum_bull:
+            sig = "BUY"
+        elif trend_bear and momentum_bear:
+            sig = "SELL"
+        else:
+            sig = "WAIT"
+        
+        return price, sig, ema20, ema100, rsi, atr, momentum
+    except:
         default = 18.5 if "ZAR" in ticker else 1.08
-        return default, "WAIT", default, default
+        return default, "WAIT", default, default, 50.0, 0.005, 0.0
 
 @st.cache_data(ttl=60)
 def get_dxy():
     try:
         dxy_df=yf.Ticker("DX-Y.NYB").history(period="2d")
-        dxy=float(dxy_df['Close'].iloc[-1]); chg=float(dxy_df['Close'].pct_change().iloc[-1]*100)
-        return dxy, chg
-    except: return 99.5, -0.15
+        dxy=float(dxy_df['Close'].iloc[-1])
+        chg=float(dxy_df['Close'].pct_change().iloc[-1]*100)
+        ema20_dxy=float(dxy_df['Close'].ewm(20).mean().iloc[-1])
+        dxy_momentum = float(dxy_df['Close'].iloc[-1] - dxy_df['Close'].iloc[-5])
+        return dxy, chg, ema20_dxy, dxy_momentum
+    except:
+        return 99.5, -0.15, 99.5, 0.0
 
 def send_alert(msg):
-    token=st.secrets.get("TELEGRAM_TOKEN",""); chat=st.secrets.get("TELEGRAM_CHAT_ID","")
+    token=st.secrets.get("TELEGRAM_TOKEN","")
+    chat=st.secrets.get("TELEGRAM_CHAT_ID","")
     if token and chat:
-        try: requests.post(f"https://api.telegram.org/bot{token}/sendMessage", data={"chat_id":chat,"text":msg,"parse_mode":"Markdown"}, timeout=5)
-        except: pass
+        try:
+            requests.post(f"https://api.telegram.org/bot{token}/sendMessage", data={"chat_id":chat,"text":msg,"parse_mode":"Markdown"}, timeout=5)
+        except:
+            pass
 
-df_gold, price, atr, ema50, ema200 = get_gold()
-eur_price, eur_sig, eur20, eur100 = get_forex("EURUSD=X")
-zar_price, zar_sig, zar20, zar100 = get_forex("USDZAR=X") # SA PAIR
-dxy, dxy_chg = get_dxy()
+# DATA COLLECTION
+df_gold, price, atr, ema50, ema200, gold_rsi, gold_macd, gold_momentum, gold_volatility = get_gold()
+eur_price, eur_sig, eur20, eur100, eur_rsi, eur_atr, eur_momentum = get_forex("EURUSD=X")
+zar_price, zar_sig, zar20, zar100, zar_rsi, zar_atr, zar_momentum = get_forex("USDZAR=X")  # SA PAIR
+dxy, dxy_chg, dxy_ema20, dxy_momentum = get_dxy()
 now = datetime.now(SAST)
 
 # HEADER SA
@@ -85,28 +121,36 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 k1,k2,k3,k4,k5 = st.columns(5)
-k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size:12px;color:#888;">{ema50:.0f}/{ema200:.0f}</div></div>', unsafe_allow_html=True)
-k2.markdown(f'<div class="kpi"><div class="kpi-label">EURUSD CONFIRM</div><div class="kpi-val">{eur_price:.5f}</div><div style="font-size:12px;color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#888"}>{eur_sig}</div></div>', unsafe_allow_html=True)
-k3.markdown(f'<div class="kpi"><div class="kpi-label">USDZAR HOME 🇿🇦</div><div class="kpi-val">R{zar_price:.4f}</div><div style="font-size:12px;color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#888"}>{zar_sig} {"= RAND STRONG" if zar_sig=="SELL" else ""}</div></div>', unsafe_allow_html=True)
-k4.markdown(f'<div class="kpi"><div class="kpi-label">DXY FUND</div><div class="kpi-val">{dxy:.2f}</div><div style="font-size:12px;color:{"#00e676" if dxy_chg<0 else "#ff5252"}>{dxy_chg:+.2f}%</div></div>', unsafe_allow_html=True)
-k5.markdown(f'<div class="kpi"><div class="kpi-label">DISCIPLINE</div><div class="kpi-val">{len(st.session_state.trades)}/4</div><div style="font-size:12px;color:{"#ff5252" if len(st.session_state.trades)>=4 else "#00e676"}>{"LOCKED" if len(st.session_state.trades)>=4 else "READY"}</div></div>', unsafe_allow_html=True)
+k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size:12px;color:#888;">{ema50:.0f}/{ema200:.0f} | RSI {gold_rsi:.0f}</div></div>', unsafe_allow_html=True)
+k2.markdown(f'<div class="kpi"><div class="kpi-label">EURUSD CONFIRM</div><div class="kpi-val">{eur_price:.5f}</div><div style="font-size:12px;color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#999"};">{eur_sig} | RSI {eur_rsi:.0f}</div></div>', unsafe_allow_html=True)
+k3.markdown(f'<div class="kpi"><div class="kpi-label">USDZAR HOME 🇿🇦</div><div class="kpi-val">R{zar_price:.4f}</div><div style="font-size:12px;color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#999"};">{zar_sig} | RSI {zar_rsi:.0f}</div></div>', unsafe_allow_html=True)
+k4.markdown(f'<div class="kpi"><div class="kpi-label">DXY FUND</div><div class="kpi-val">{dxy:.2f}</div><div style="font-size:12px;color:{"#00e676" if dxy_chg<0 else "#ff5252"}>{dxy_chg:+.2f}% | MOM {dxy_momentum:+.1f}</div></div>', unsafe_allow_html=True)
+k5.markdown(f'<div class="kpi"><div class="kpi-label">DISCIPLINE</div><div class="kpi-val">{len(st.session_state.trades)}/4</div><div style="font-size:12px;color:{"#ff5252" if len(st.session_state.trades)>=4 else "#00e676"};">Portfolio: {"FULL" if len(st.session_state.trades)>=4 else "ACTIVE"}</div></div>', unsafe_allow_html=True)
 
-# CORE LOGIC UNCHANGED
-setup_bull = ema50>ema200 and price>ema50
-setup_bear = ema50<ema200 and price<ema50
-fund_bull = dxy_chg < -0.08
-fund_bear = dxy_chg > 0.08
+# ENHANCED CORE LOGIC
+setup_bull = ema50>ema200 and price>ema50 and gold_rsi < 70 and gold_macd > 0
+setup_bear = ema50<ema200 and price<ema50 and gold_rsi > 30 and gold_macd < 0
+fund_bull = dxy_chg < -0.08 and dxy_momentum < 0
+fund_bear = dxy_chg > 0.08 and dxy_momentum > 0
 session_ok = 10 <= now.hour < 20
 agree_buy = setup_bull and fund_bull and session_ok
 agree_sell = setup_bear and fund_bear and session_ok
 
-# SA CONFIDENCE - ZAR SELL = GOLD BUY
+# SA CONFIDENCE - ENHANCED ZAR SELL = GOLD BUY
 conf = 0
 if agree_buy or agree_sell: conf+=50
-if eur_sig=="BUY" and agree_buy: conf+=25
-if eur_sig=="SELL" and agree_sell: conf+=25
-if zar_sig=="SELL" and agree_buy: conf+=25 # RAND STRONG = Dollar weak = Gold BUY
-if zar_sig=="BUY" and agree_sell: conf+=25 # RAND WEAK = Dollar strong = Gold SELL
+if eur_sig=="BUY" and agree_buy: conf+=15
+if eur_sig=="SELL" and agree_sell: conf+=15
+if eur_momentum > 0 and agree_buy: conf+=10
+if eur_momentum < 0 and agree_sell: conf+=10
+if zar_sig=="SELL" and agree_buy: conf+=15  # RAND STRONG = Dollar weak = Gold BUY
+if zar_sig=="BUY" and agree_sell: conf+=15  # RAND WEAK = Dollar strong = Gold SELL
+if zar_momentum < 0 and agree_buy: conf+=10
+if zar_momentum > 0 and agree_sell: conf+=10
+
+# Volatility adjustment
+vol_adjustment = min(gold_volatility / 5.0, 5)
+conf = min(int(conf + vol_adjustment), 100)
 
 conf_label = f'<span class="conf-high">CONF {conf}% HIGH 🇿🇦</span>' if conf>=75 else f'<span class="conf-mid">CONF {conf}% MED</span>' if conf>=50 else f'<span class="conf-low">CONF {conf}% LOW</span>'
 
@@ -115,15 +159,40 @@ with left:
     tab1, tab2, tab3 = st.tabs(["⚔️ GOLD CORE", "🇪🇺 EURUSD", "🇿🇦 USDZAR - YOUR RAND"])
     with tab1:
         st.markdown(f'<div class="glass"> <div style="display:flex;justify-content:space-between;"><div class="kpi-label">SA SMART LOGIC</div><div>{conf_label}</div></div>', unsafe_allow_html=True)
-        html="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AXAUUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg" style="width:100%;height:100%;border:0;border-radius:12px;"></iframe></div>"""
+        html="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AXAUUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
         st.components.v1.html(html, height=380)
         st.markdown('</div>', unsafe_allow_html=True)
+        # Gold metrics
+        st.markdown(f"""
+        <div class="glass">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>🥇 Price: ${price:,.2f}<br>📊 EMA50/200: {ema50:.0f}/{ema200:.0f}<br>💪 RSI: {gold_rsi:.1f}</div>
+        <div>📈 Momentum: {gold_momentum:+.2f}<br>🎯 MACD: {gold_macd:+.5f}<br>🌪️ Volatility: {gold_volatility:.4f}</div>
+        </div>
+        </div>
+        """, unsafe_allow_html=True)
     with tab2:
-        html2="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AEURUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg" style="width:100%;height:100%;border:0;border-radius:12px;"></iframe></div>"""
+        html2="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AEURUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
         st.components.v1.html(html2, height=380)
+        st.markdown(f"""
+        <div class="glass">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>💶 Price: {eur_price:.5f}<br>📊 EMA20/100: {eur20:.5f}/{eur100:.5f}<br>💪 RSI: {eur_rsi:.1f}</div>
+        <div>📈 Momentum: {eur_momentum:+.5f}<br>🎯 Signal: {eur_sig}<br>⚡ Trend: {"BULLISH" if eur_sig=="BUY" else "BEARISH" if eur_sig=="SELL" else "NEUTRAL"}</div>
+        </div>
+        </div>
+        """, unsafe_allow_html=True)
     with tab3:
-        html3="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AUSDZAR&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg" style="width:100%;height:100%;border:0;border-radius:12px;"></iframe></div>"""
+        html3="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AUSDZAR&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
         st.components.v1.html(html3, height=380)
+        st.markdown(f"""
+        <div class="glass">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>🇿🇦 Price: R{zar_price:.4f}<br>📊 EMA20/100: {zar20:.4f}/{zar100:.4f}<br>💪 RSI: {zar_rsi:.1f}</div>
+        <div>📈 Momentum: {zar_momentum:+.6f}<br>🎯 Signal: {zar_sig}<br>💰 (SELL=Strong Rand=Good)</div>
+        </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.write("")
     if len(st.session_state.trades)>=4:
@@ -134,7 +203,7 @@ with left:
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE BUY - SA EDITION"):
             st.session_state.trades.append(f"BUY {now.strftime('%H:%M')} {price:.2f} {conf}%")
-            send_alert(f"⚔️ *SA EDITION EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4")
+            send_alert(f"⚔️ *SA EDITION EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
             st.rerun()
     elif agree_sell:
         sl=price+atr*1.5; tp=price-(abs(sl-price)*2.5)
@@ -142,10 +211,10 @@ with left:
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE SELL - SA EDITION"):
             st.session_state.trades.append(f"SELL {now.strftime('%H:%M')} {price:.2f} {conf}%")
-            send_alert(f"⚔️ *SA EDITION EXECUTED*\n🔴 SELL XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4")
+            send_alert(f"⚔️ *SA EDITION EXECUTED*\n🔴 SELL XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
             st.rerun()
     else:
-        st.markdown(f'<div class="wait-signal"><h3>⚪ STOIC WAIT - SA CHECK</h3><p>Gold {setup_bull or setup_bear} | DXY {fund_bull or fund_bear} | EUR {eur_sig} | ZAR {zar_sig} (Need SELL for BUY) | Conf {conf}%</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="wait-signal"><h3>⚪ STOIC WAIT - SA CHECK</h3><p>Gold {setup_bull or setup_bear} | DXY {fund_bull or fund_bear} | EUR {eur_sig} | ZAR {zar_sig} (Need SELL for BUY) | VOL {gold_volatility:.4f}</p></div>', unsafe_allow_html=True)
 
 with right:
     st.markdown('<div class="glass"><div class="kpi-label">🇿🇦 RAND CALCULATOR</div>', unsafe_allow_html=True)
@@ -156,10 +225,15 @@ with right:
     rr_v = float(rr.split(":")[1])
     risk_amt = bal_usd * risk/100
     lots = max(0.01, min(risk_amt/((atr*1.5)*10), 2.0))
-    st.markdown(f'<div style="margin-top:12px;background:#111;border-radius:10px;padding:12px;">USD Risk <span class="gold-text">${risk_amt:.2f}</span> ≈ R{risk_amt*zar_price:.2f}<br>Reward ${risk_amt*rr_v:.2f} ≈ R{risk_amt*rr_v*zar_price:.2f}<br>Lot <span class="gold-text">{lots:.2f}</span><br>CONF {conf}%</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="margin-top:12px;background:#111;border-radius:10px;padding:12px;">USD Risk <span class="gold-text">${risk_amt:.2f}</span> ≈ R{risk_amt*zar_price:.2f}<br>Reward ${risk_amt*rr_v:.2f} ≈ R{risk_amt*rr_v*zar_price:.2f}<br>Lots {lots:.2f}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">SA VOTE SYSTEM</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">🥇 GOLD: {"BUY" if agree_buy else "SELL" if agree_sell else "WAIT"} (50%)</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">🇪🇺 EURUSD: {eur_sig} (25%) - Must match Gold</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">🇿🇦 USDZAR: {zar_sig} - Need <b>SELL</b> for Gold BUY (Rand Strong = Good)</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">📊 SIGNAL STRENGTH</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">Gold RSI: {gold_rsi:.1f} {"⚡ Overbought" if gold_rsi>70 else "⚠️ Oversold" if gold_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">EUR RSI: {eur_rsi:.1f} {"⚡ Overbought" if eur_rsi>70 else "⚠️ Oversold" if eur_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">ZAR RSI: {zar_rsi:.1f} {"⚡ Overbought" if zar_rsi>70 else "⚠️ Oversold" if zar_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
