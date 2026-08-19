@@ -1,12 +1,3 @@
-import streamlit as st
-import datetime
-import pytz
-import random
-import pandas as pd
-import yfinance as yf
-
-st.set_page_config(page_title="STOIC HFM LIVE", page_icon="⚔️", layout="wide")
-SAST = pytz.timezone("Africa/Johannesburg")
 st.markdown("""
 <style>
     .stApp {
@@ -46,9 +37,4 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-SAST = pytz.timezone("Africa/Johannesburg")        padding: 25px;
-        text-align: center;
-        box-shadow: 0 0 40px rgba(255,215,0,0.2);
-    }
-</style>
-""", unsafe_allow_html=True)
+SAST = pytz.timezone("Africa/Johannesburg")
