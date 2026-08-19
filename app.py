@@ -308,6 +308,49 @@ def send_alert(msg):
         except:
             pass
 
+# ── MetaTrader 5 Bridge helpers ───────────────────────────────────────────────
+_MT5_URL   = st.secrets.get("MT5_BRIDGE_URL", "").rstrip("/")
+_MT5_TOKEN = st.secrets.get("MT5_BRIDGE_TOKEN", "")
+_MT5_ENABLED = bool(_MT5_URL and _MT5_TOKEN)
+
+def call_mt5_bridge(endpoint: str, payload: dict | None = None, method: str = "POST") -> dict | None:
+    """Call the MT5 bridge server. Returns response dict or None on failure."""
+    if not _MT5_ENABLED:
+        return None
+    headers = {"Authorization": "Bearer " + _MT5_TOKEN, "Content-Type": "application/json"}
+    url = f"{_MT5_URL}/{endpoint.lstrip('/')}"
+    try:
+        if method == "GET":
+            resp = requests.get(url, headers=headers, params=payload, timeout=8)
+        else:
+            resp = requests.post(url, headers=headers, json=payload or {}, timeout=8)
+        if resp.status_code == 200:
+            return resp.json()
+        return {"error": f"HTTP {resp.status_code}", "detail": resp.text[:200]}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+def mt5_account_info() -> dict | None:
+    """Fetch MT5 account info; returns None if bridge disabled/unreachable."""
+    return call_mt5_bridge("account", method="GET")
+
+def mt5_open_positions(symbol: str = "XAUUSD") -> list:
+    """Return list of open MT5 positions for symbol."""
+    result = call_mt5_bridge("positions", {"symbol": symbol}, method="GET")
+    if result and "positions" in result:
+        return result["positions"]
+    return []
+
+def mt5_place_order(direction: str, lots: float, sl: float, tp: float,
+                    symbol: str = "XAUUSD") -> dict | None:
+    return call_mt5_bridge("order", {
+        "symbol": symbol, "direction": direction,
+        "lots": lots, "sl": sl, "tp": tp,
+    })
+
+def mt5_close_all(symbol: str = "XAUUSD") -> dict | None:
+    return call_mt5_bridge("close", {"symbol": symbol})
+
 def get_conf_label(conf):
     """Generate confidence label with enhanced styling"""
     if conf >= 85:
@@ -341,6 +384,10 @@ def calculate_levels(price, atr, agree_buy, rr_v):
     sl = price - atr*1.5 if agree_buy else price + atr*1.5
     tp = price + (abs(price-sl) * rr_v) if agree_buy else price - (abs(sl-price) * rr_v)
     return sl, tp
+
+def calc_lots(bal_usd: float, risk_pct: float, atr: float) -> float:
+    """Calculate position size in lots based on balance, risk %, and ATR."""
+    return max(0.01, min((bal_usd * risk_pct / 100) / ((atr * 1.5) * 10), 2.0))
 
 def check_trade_outcome(current_price, sl, tp, direction):
     """
@@ -436,8 +483,23 @@ with st.sidebar:
     st.markdown('<hr class="sb-divider"><div class="sb-section">🔗 Links</div>', unsafe_allow_html=True)
     st.markdown('<div class="sb-nav-item"><a href="https://hfmbot-8hxcdrycoldue48qs2eoxy.streamlit.app/" target="_blank" style="color:#FFD700;text-decoration:none;">🌐 Live App ↗</a></div>', unsafe_allow_html=True)
 
+    st.markdown('<hr class="sb-divider"><div class="sb-section">🤖 MT5 Bridge</div>', unsafe_allow_html=True)
+    if _MT5_ENABLED:
+        sb_acct = mt5_account_info()
+        if sb_acct and "balance" in sb_acct:
+            sb_dot = "status-dot-green"
+            sb_label = f"Connected · {sb_acct.get('server','')}"
+            st.markdown(f'<div class="sb-nav-item"><span class="{sb_dot}"></span>{sb_label}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="sb-nav-item">💰 Balance: <b style="color:#FFD700">{sb_acct.get("currency","USD")} {sb_acct.get("balance",0):,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="sb-nav-item">📊 Equity: <b>{sb_acct.get("currency","USD")} {sb_acct.get("equity",0):,.2f}</b></div>', unsafe_allow_html=True)
+        else:
+            err_msg = (sb_acct or {}).get("error", "unreachable")
+            st.markdown(f'<div class="sb-nav-item" style="border-color:#ff1744;color:#ff5252;"><span class="status-dot-red"></span>Bridge Error: {err_msg[:40]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="sb-nav-item" style="color:#555;">Not configured</div>', unsafe_allow_html=True)
+
     st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
-    st.markdown('<div style="text-align:center;font-size:9px;color:#333;margin-top:8px;">MARONG STOIC BOT v2.0<br>Powered by yfinance · TradingView</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center;font-size:9px;color:#333;margin-top:8px;">MARONG STOIC BOT v2.0<br>Powered by yfinance · TradingView · MT5</div>', unsafe_allow_html=True)
 
 # ── TOP BAR HEADER ────────────────────────────────────────────────────────────[...]
 _signal_color = "#00e676" if agree_buy else "#ff1744" if agree_sell else "#888"
@@ -471,6 +533,12 @@ conf_breakdown = get_conf_breakdown(conf, base_conf, eur_signal_bonus, eur_momen
 
 # KILL-SWITCH CHECK
 if st.session_state.losses >= 2:
+    # Close all open MT5 positions when kill-switch triggers
+    if _MT5_ENABLED and not st.session_state.get("mt5_killswitch_sent"):
+        close_result = mt5_close_all("XAUUSD")
+        if close_result and close_result.get("success"):
+            send_alert(f"🔒 *MT5 KILL-SWITCH* — Closed {close_result.get('closed',0)} position(s) via bridge.")
+        st.session_state["mt5_killswitch_sent"] = True
     st.markdown(f"""
     <div class="killswitch">
     🚨 KILL-SWITCH ACTIVATED 🚨<br>
@@ -528,17 +596,39 @@ with left:
         sl, tp = calculate_levels(price, atr, True, rr_v if "rr_v" in locals() else 2.5)
         badge = "HIGH CONVICTION" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
+        _lots = calc_lots(bal_usd if "bal_usd" in locals() else 500.0, risk if "risk" in locals() else 1.0, atr)
+        if _MT5_ENABLED:
+            st.caption(f"🔗 MT5 Bridge active — will place {_lots:.2f} lot BUY on execution")
         if st.button("✅ EXECUTE BUY"):
             st.session_state.trades.append(f"BUY {now.strftime('%H:%M')} {price:.2f} {conf}%")
             send_alert(f"⚔️ *SIGNAL EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 trades")
+            if _MT5_ENABLED:
+                mt5_result = mt5_place_order("BUY", _lots, sl, tp)
+                if mt5_result and mt5_result.get("success"):
+                    ticket = mt5_result.get("ticket", "?")
+                    send_alert(f"✅ *MT5 ORDER PLACED* ticket #{ticket}\nBUY {_lots:.2f} lots @ {mt5_result.get('price', price):.2f}")
+                else:
+                    err = (mt5_result or {}).get("error", "unknown error")
+                    send_alert(f"⚠️ *MT5 ORDER FAILED*\n{err}")
             st.rerun()
     elif agree_sell:
         sl, tp = calculate_levels(price, atr, False, rr_v if "rr_v" in locals() else 2.5)
         badge = "HIGH CONVICTION" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
+        _lots = calc_lots(bal_usd if "bal_usd" in locals() else 500.0, risk if "risk" in locals() else 1.0, atr)
+        if _MT5_ENABLED:
+            st.caption(f"🔗 MT5 Bridge active — will place {_lots:.2f} lot SELL on execution")
         if st.button("✅ EXECUTE SELL"):
             st.session_state.trades.append(f"SELL {now.strftime('%H:%M')} {price:.2f} {conf}%")
             send_alert(f"⚔️ *SIGNAL EXECUTED*\n🔴 SELL XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 trades")
+            if _MT5_ENABLED:
+                mt5_result = mt5_place_order("SELL", _lots, sl, tp)
+                if mt5_result and mt5_result.get("success"):
+                    ticket = mt5_result.get("ticket", "?")
+                    send_alert(f"✅ *MT5 ORDER PLACED* ticket #{ticket}\nSELL {_lots:.2f} lots @ {mt5_result.get('price', price):.2f}")
+                else:
+                    err = (mt5_result or {}).get("error", "unknown error")
+                    send_alert(f"⚠️ *MT5 ORDER FAILED*\n{err}")
             st.rerun()
     else:
         st.markdown(f'<div class="wait-signal"><h3>⚪ STOIC WAIT</h3><p>Analyzing: Gold {setup_bull or setup_bear} | DXY {fund_bull or fund_bear} | EUR {eur_sig} | ZAR {zar_sig}</p></div>', unsafe_allow_html=True)
@@ -566,11 +656,25 @@ with right:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">⚠️ LOSS TRACKER</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
+
+    # Auto position-outcome check via MT5 bridge
+    if _MT5_ENABLED and st.session_state.trades:
+        open_pos = mt5_open_positions("XAUUSD")
+        if open_pos:
+            pos_lines = "".join([
+                f'<div style="background:#000;padding:6px;border-radius:6px;margin:3px 0;font-size:10px;border:1px solid #555;">'
+                f'#{p["ticket"]} {p["type"]} {p["lots"]}L @ {p["open_price"]:.2f} | '
+                f'<span style="color:{"#00e676" if p["profit"]>=0 else "#ff5252"}">P&L ${p["profit"]:.2f}</span>'
+                f'</div>'
+                for p in open_pos
+            ])
+            st.markdown(f'<div style="margin-top:8px;"><div class="kpi-label">📡 MT5 LIVE POSITIONS</div>{pos_lines}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="font-size:10px;color:#888;margin-top:6px;">MT5: No open positions</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
         if st.button("❌ Log Loss"):
-            # Example: if trade outcome was a loss
             st.session_state.losses += 1
             send_alert(f"⚠️ Loss recorded: {st.session_state.losses}/2\n{st.session_state.losses}/2 consecutive losses.")
             if st.session_state.losses >= 2:
@@ -578,17 +682,37 @@ with right:
             st.rerun()
     with col2:
         if st.button("✅ Log Win"):
-            # Example: if trade outcome was a win, reset losses
             st.session_state.losses = 0
             send_alert(f"✅ Win recorded! Loss counter reset to 0.")
             st.rerun()
     
     if st.button("🔄 Reset Losses"):
         st.session_state.losses = 0
+        st.session_state["mt5_killswitch_sent"] = False
         send_alert(f"🔄 Loss counter manually reset to 0.")
         st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
+
+    # MT5 account summary panel
+    if _MT5_ENABLED:
+        acct = mt5_account_info()
+        if acct and "balance" in acct:
+            st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">🔗 MT5 ACCOUNT</div>', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="background:#000;padding:10px;border-radius:8px;border:1px solid #FFD700;font-size:12px;">
+            <div>👤 {acct.get('name','')} @ {acct.get('server','')}</div>
+            <div style="margin-top:6px;">💰 Balance: <b style="color:#FFD700">{acct.get('currency','USD')} {acct.get('balance',0):,.2f}</b></div>
+            <div>📊 Equity: <b style="color:{"#00e676" if acct.get('equity',0)>=acct.get('balance',0) else "#ff5252"}">{acct.get('currency','USD')} {acct.get('equity',0):,.2f}</b></div>
+            <div>🔓 Free Margin: {acct.get('currency','USD')} {acct.get('free_margin',0):,.2f}</div>
+            <div>⚡ Leverage: 1:{acct.get('leverage',100)}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        elif acct and "error" in acct:
+            st.markdown(f'<div style="background:#1a0000;border:1px solid #ff1744;border-radius:8px;padding:8px;font-size:10px;color:#ff5252;margin-top:10px;">⚠️ MT5 Bridge: {acct["error"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="background:#111;border:1px solid #333;border-radius:8px;padding:8px;font-size:10px;color:#555;margin-top:10px;">MT5 Bridge not configured — set MT5_BRIDGE_URL and MT5_BRIDGE_TOKEN in secrets</div>', unsafe_allow_html=True)
     
     # Trade History
     if st.session_state.trade_history:
