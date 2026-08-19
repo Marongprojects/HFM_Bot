@@ -4,21 +4,19 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 from streamlit_autorefresh import st_autorefresh
 
-# --- LOGO PATH ---
-LOGO = "logo.png" if os.path.exists("logo.png") else "⚔️"
+LOGO_FILE = "logo.png"
+logo_exists = os.path.exists(LOGO_FILE)
 
-st.set_page_config(page_title="MARONG STOIC BOT", page_icon=LOGO if os.path.exists("logo.png") else "⚔️", layout="wide")
+st.set_page_config(page_title="MARONG STOIC BOT", page_icon=LOGO_FILE if logo_exists else "⚔️", layout="wide")
 SAST = pytz.timezone("Africa/Johannesburg")
 st_autorefresh(interval=1000, key="clock")
 
-# --- CSS SHINE ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 .stApp { background: #08080a; color: #e0e0e0; font-family: 'JetBrains Mono', monospace; }
 .glass { background: rgba(22,22,26,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,215,0,0.15); border-radius: 16px; padding: 18px; }
-.kpi { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 16px; padding: 18px; border: 1px solid #222; border-top: 1px solid rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,215,0,0.15); transition: transform 0.2s ease-in-out; }
-.kpi:hover { transform: scale(1.02); }
+.kpi { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 16px; padding: 18px; border: 1px solid #222; border-top: 1px solid rgba(255,215,0,0.3); box-shadow: 0 0 12px rgba(255,215,0,0.15); }
 .kpi-val { font-size: 28px; font-weight: 800; color: white; }
 .kpi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; }
 .gold-text { background: linear-gradient(90deg,#FFD700,#FFA500,#FFD700); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 6s linear infinite; font-weight: 900; }
@@ -66,14 +64,6 @@ def get_dxy():
         return dxy, chg
     except: return 99.5, -0.15
 
-@st.cache_data(ttl=120)
-def bloomberg():
-    try:
-        r=requests.get("https://feeds.bloomberg.com/markets/news.rss", headers={"User-Agent":"Mozilla/5.0"}, timeout=8)
-        root=ET.fromstring(r.content)
-        return [(item.find('title').text, item.find('link').text) for item in root.findall('.//item')[:6]]
-    except: return [("Bloomberg: Dollar Softens","")]
-
 def send_alert(msg):
     token=st.secrets.get("TELEGRAM_TOKEN",""); chat=st.secrets.get("TELEGRAM_CHAT_ID","")
     if token and chat:
@@ -84,21 +74,65 @@ df_gold, price, atr, ema50, ema200 = get_gold()
 eur_price, eur_sig, eur20, eur100 = get_forex("EURUSD=X")
 gbp_price, gbp_sig, gbp20, gbp100 = get_forex("GBPUSD=X")
 dxy, dxy_chg = get_dxy()
-news = bloomberg()
 now = datetime.now(SAST)
 
-# --- HEADER WITH MARONG LOGO ---
+# HEADER
 c1, c2, c3 = st.columns([0.15, 0.60, 0.25])
 with c1:
-    if os.path.exists("logo.png"):
-        st.image("logo.png", width=75)
+    if logo_exists:
+        st.image(LOGO_FILE, width=75)
     else:
         st.markdown('<div style="font-size:40px">⚔️</div>', unsafe_allow_html=True)
 with c2:
-    st.markdown('<div style="margin-top:5px"><span class="gold-text" style="font-size:24px;letter-spacing:1px;">MARONG STOIC BOT</span><br><span style="color:#666;font-size:10px;letter-spacing:3px;">FINANCE • PROTECTION • STOIC</span></div>', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top:5px"><span class="gold-text" style="font-size:24px;">MARONG STOIC BOT</span><br><span style="color:#666;font-size:10px;letter-spacing:3px;">FINANCE • PROTECTION • STOIC</span></div>', unsafe_allow_html=True)
 with c3:
     st.markdown(f'<div style="text-align:right;margin-top:8px"><span style="color:#FFD700;font-weight:700;">{now.strftime("%H:%M:%S")}</span> SAST<br><span style="font-size:11px;color:#00e676;">● VAULT SECURED</span></div>', unsafe_allow_html=True)
 
-# --- KPIs ---
+# KPIs - FIXED (no nested quotes)
 k1,k2,k3,k4,k5 = st.columns(5)
-k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size
+
+with k1:
+    st.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size:12px;color:#888;">{ema50:.0f}/{ema200:.0f}</div></div>', unsafe_allow_html=True)
+
+eur_color = "#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#888"
+with k2:
+    st.markdown(f'<div class="kpi"><div class="kpi-label">EURUSD WING</div><div class="kpi-val">{eur_price:.5f}</div><div style="font-size:12px;color:{eur_color}">{eur_sig}</div></div>', unsafe_allow_html=True)
+
+gbp_color = "#00e676" if gbp_sig=="BUY" else "#ff5252" if gbp_sig=="SELL" else "#888"
+with k3:
+    st.markdown(f'<div class="kpi"><div class="kpi-label">GBPUSD WING</div><div class="kpi-val">{gbp_price:.5f}</div><div style="font-size:12px;color:{gbp_color}">{gbp_sig}</div></div>', unsafe_allow_html=True)
+
+dxy_color = "#00e676" if dxy_chg<0 else "#ff5252"
+with k4:
+    st.markdown(f'<div class="kpi"><div class="kpi-label">DXY FUND</div><div class="kpi-val">{dxy:.2f}</div><div style="font-size:12px;color:{dxy_color}">{dxy_chg:+.2f}%</div></div>', unsafe_allow_html=True)
+
+disc_color = "#ff5252" if len(st.session_state.trades)>=4 else "#00e676"
+disc_text = "LOCKED" if len(st.session_state.trades)>=4 else "READY"
+with k5:
+    st.markdown(f'<div class="kpi"><div class="kpi-label">DISCIPLINE</div><div class="kpi-val">{len(st.session_state.trades)}/4</div><div style="font-size:12px;color:{disc_color}">{disc_text}</div></div>', unsafe_allow_html=True)
+
+# CORE LOGIC
+setup_bull = ema50>ema200 and price>ema50
+setup_bear = ema50<ema200 and price<ema50
+fund_bull = dxy_chg < -0.08
+fund_bear = dxy_chg > 0.08
+session_ok = 10 <= now.hour < 20
+agree_buy = setup_bull and fund_bull and session_ok
+agree_sell = setup_bear and fund_bear and session_ok
+
+conf = 0
+if agree_buy or agree_sell: conf+=50
+if eur_sig=="BUY" and agree_buy: conf+=25
+if eur_sig=="SELL" and agree_sell: conf+=25
+if gbp_sig=="BUY" and agree_buy: conf+=25
+if gbp_sig=="SELL" and agree_sell: conf+=25
+if eur_sig=="WAIT": conf+=10
+if gbp_sig=="WAIT": conf+=10
+
+conf_label = f'<span class="conf-high">CONF {conf}% HIGH</span>' if conf>=75 else f'<span class="conf-mid">CONF {conf}% MED</span>' if conf>=50 else f'<span class="conf-low">CONF {conf}% LOW</span>'
+
+left, right = st.columns([1.7,1])
+with left:
+    tab1, tab2, tab3 = st.tabs(["GOLD CORE", "EURUSD WING", "GBPUSD WING"])
+    with tab1:
+        st.markdown(f'<div class="glass"><div style="display:flex;justify-content:space-between;"><div class="kpi
