@@ -2,3 +2,4 @@ streamlit
 pytz
 pandas
 yfinance
+streamlit-autorefresh
