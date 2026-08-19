@@ -40,61 +40,42 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
 /* ── Sidebar shell ─────────────────────────────────────── */
 [data-testid="stSidebar"] {
     background: #000000 !important;
-    border-right: 1px solid #FFD700 !important;
-    box-shadow: 4px 0 24px rgba(255,215,0,0.15);
+    border-right: 1px solid #b08d2f !important;
+    box-shadow: none !important;
 }
 [data-testid="stSidebar"] > div:first-child { padding-top: 0 !important; }
 
 /* ── Top navigation bar ─────────────────────────────────── */
 .topbar {
     background: #000000;
-    border-bottom: 2px solid #FFD700;
+    border-bottom: 1px solid #b08d2f;
     padding: 14px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 18px;
-    position: relative;
-    overflow: hidden;
-}
-.topbar::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 40px,
-        rgba(255,215,0,0.08) 40px,
-        rgba(255,215,0,0.08) 41px
-    );
-    pointer-events: none;
 }
 
 /* ── Logo in header ─────────────────────────────────────── */
-.logo-img { height: 52px; border-radius: 50%; border: 2px solid #FFD700; box-shadow: 0 0 16px rgba(255,215,0,0.4); }
-.logo-sm  { height: 100px; border-radius: 50%; border: 3px solid #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.35); display: block; margin: 0 auto 10px; }
+.logo-img { height: 52px; border-radius: 50%; border: 2px solid #b08d2f; box-shadow: none; }
+.logo-sm  { height: 100px; border-radius: 50%; border: 2px solid #b08d2f; box-shadow: none; display: block; margin: 0 auto 10px; }
 
-/* ── Gold shimmer text ──────────────────────────────────── */
+/* ── Gold text ──────────────────────────────────────────── */
 .gold-text {
-    background: linear-gradient(90deg, #FFD700 0%, #FFA500 30%, #FFD700 60%, #FFEC6E 80%, #FFD700 100%);
-    background-size: 300% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: shine 5s linear infinite;
+    color: #d4af37;
+    background: none !important;
+    -webkit-background-clip: initial;
+    -webkit-text-fill-color: #d4af37;
+    background-clip: initial;
 }
-@keyframes shine { to { background-position: 300% center; } }
 
 /* ── Glass card ─────────────────────────────────────────── */
 .glass {
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid #FFD700;
+    background: #000000;
+    border: 1px solid #b08d2f;
     border-radius: 18px;
     padding: 18px;
-    box-shadow: 0 4px 24px rgba(255,215,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+    box-shadow: none;
 }
 
 /* ── KPI card ───────────────────────────────────────────── */
@@ -102,34 +83,28 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
     background: #000000;
     border-radius: 16px;
     padding: 18px;
-    border: 2px solid #FFD700;
-    box-shadow: 0 0 18px rgba(255,215,0,0.2), 0 4px 12px rgba(0,0,0,0.6);
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #b08d2f;
+    box-shadow: none;
 }
-.kpi:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 28px rgba(255,215,0,0.35); }
-.kpi-val { font-size: 24px; font-weight: 800; color: #FFD700; letter-spacing: -0.5px; }
+.kpi-val { font-size: 24px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
 .kpi-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
 
 /* ── Signal boxes ───────────────────────────────────────── */
 .buy-signal {
-    background: #001a00;
-    border: 2px solid #00e676;
+    background: #000000;
+    border: 1px solid #b08d2f;
     border-radius: 18px; padding: 24px; text-align: center;
-    font-weight: 900; font-size: 22px; color: #00ff87;
-    box-shadow: 0 0 30px rgba(0,198,83,0.4);
-    animation: pulse-green 2s ease-in-out infinite;
+    font-weight: 900; font-size: 22px; color: #ffffff;
+    box-shadow: none;
 }
-@keyframes pulse-green { 0%,100%{box-shadow:0 0 30px rgba(0,198,83,0.4)} 50%{box-shadow:0 0 50px rgba(0,230,118,0.6)} }
 
 .sell-signal {
-    background: #1a0000;
-    border: 2px solid #ff1744;
+    background: #000000;
+    border: 1px solid #b08d2f;
     border-radius: 18px; padding: 24px; text-align: center;
-    font-weight: 900; font-size: 22px; color: #ff6b6b;
-    box-shadow: 0 0 30px rgba(255,23,68,0.4);
-    animation: pulse-red 2s ease-in-out infinite;
+    font-weight: 900; font-size: 22px; color: #ffffff;
+    box-shadow: none;
 }
-@keyframes pulse-red { 0%,100%{box-shadow:0 0 30px rgba(255,23,68,0.4)} 50%{box-shadow:0 0 50px rgba(255,82,82,0.6)} }
 
 .wait-signal {
     background: #0a0a0a;
@@ -139,61 +114,58 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
 }
 
 .locked {
-    background: #1a0000;
-    border: 2px solid #ff1744; border-radius: 18px; padding: 20px; text-align: center;
+    background: #000000;
+    border: 1px solid #b08d2f; border-radius: 18px; padding: 20px; text-align: center;
 }
 
 .killswitch {
-    background: #4d0000;
-    border: 2px solid #ff1744; border-radius: 18px; padding: 28px; text-align: center;
-    font-weight: 900; font-size: 18px; color: #ff6b6b;
-    animation: ks-pulse 1s ease-in-out infinite;
-    box-shadow: 0 0 40px rgba(255,23,68,0.5);
+    background: #000000;
+    border: 1px solid #b08d2f; border-radius: 18px; padding: 28px; text-align: center;
+    font-weight: 900; font-size: 18px; color: #ffffff;
+    box-shadow: none;
 }
-@keyframes ks-pulse { 0%,100%{opacity:1} 50%{opacity:0.75} }
 
 /* ── Confidence badges ──────────────────────────────────── */
-.conf-high    { background: linear-gradient(90deg,#00c853,#00e676); color:#000; padding:8px 16px; border-radius:22px; font-weight:900; box-shadow:0 0 12px rgba(0,200,83,0.35); }
-.conf-mid     { background: #1a1a00; color:#FFD700; padding:8px 16px; border-radius:22px; font-weight:900; border:1px solid #FFD700; }
-.conf-low     { background: #1a1a1a; color:#888; padding:8px 16px; border-radius:22px; border:1px solid #333; }
-.conf-verylow { background: #1a0505; color:#ff5252; padding:8px 16px; border-radius:22px; border:1px solid #ff5252; }
+.conf-high    { background: #000000; color:#ffffff; padding:8px 16px; border-radius:22px; font-weight:900; border:1px solid #d4af37; box-shadow:none; }
+.conf-mid     { background: #000000; color:#ffffff; padding:8px 16px; border-radius:22px; font-weight:900; border:1px solid #b08d2f; }
+.conf-low     { background: #000000; color:#ffffff; padding:8px 16px; border-radius:22px; border:1px solid #444; }
+.conf-verylow { background: #000000; color:#aaa;    padding:8px 16px; border-radius:22px; border:1px solid #555; }
 
 /* ── Buttons ────────────────────────────────────────────── */
 .stButton > button {
-    background: linear-gradient(90deg, #B8860B, #D4AF37, #FFD700, #D4AF37, #B8860B) !important;
-    background-size: 200% auto !important;
-    color: #000 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
     font-weight: 900 !important;
     font-family: 'JetBrains Mono', monospace !important;
     height: 54px !important;
     border-radius: 12px !important;
     width: 100% !important;
-    border: none !important;
+    border: 1px solid #b08d2f !important;
     letter-spacing: 1px !important;
-    transition: background-position 0.4s, box-shadow 0.3s !important;
-    box-shadow: 0 2px 12px rgba(212,175,55,0.35) !important;
+    transition: none !important;
+    box-shadow: none !important;
 }
 .stButton > button:hover {
-    background-position: right center !important;
-    box-shadow: 0 0 22px rgba(255,215,0,0.55) !important;
+    background: #111111 !important;
+    box-shadow: none !important;
 }
 
 /* ── Sidebar nav items ──────────────────────────────────── */
 .sb-nav-item {
-    background: rgba(255,215,0,0.05);
-    border: 1px solid #FFD700;
+    background: #000000;
+    border: 1px solid #b08d2f;
     border-radius: 10px;
     padding: 10px 14px;
     margin-bottom: 8px;
     font-size: 12px;
-    color: #ccc;
+    color: #ffffff;
     cursor: default;
 }
-.sb-nav-item:hover { background: rgba(255,215,0,0.12); color: #FFD700; }
-.sb-section { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 6px; }
-.sb-divider  { border: none; border-top: 1px solid #FFD700; margin: 14px 0; }
-.status-dot-green { display:inline-block; width:8px; height:8px; background:#00e676; border-radius:50%; margin-right:6px; box-shadow:0 0 6px #00e676; }
-.status-dot-red   { display:inline-block; width:8px; height:8px; background:#ff1744; border-radius:50%; margin-right:6px; box-shadow:0 0 6px #ff1744; }
+.sb-nav-item:hover { background: #111111; color: #ffffff; }
+.sb-section { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 6px; }
+.sb-divider  { border: none; border-top: 1px solid #b08d2f; margin: 14px 0; }
+.status-dot-green { display:inline-block; width:8px; height:8px; background:#00e676; border-radius:50%; margin-right:6px; }
+.status-dot-red   { display:inline-block; width:8px; height:8px; background:#ff1744; border-radius:50%; margin-right:6px; }
 
 /* ── Hide Streamlit default chrome ──────────────────────── */
 #MainMenu { visibility: hidden; }
@@ -203,16 +175,16 @@ header    { visibility: hidden; }
 /* ── Streamlit tab styling ──────────────────────────────── */
 [data-baseweb="tab-list"] { background: transparent !important; gap: 4px; }
 [data-baseweb="tab"] {
-    background: rgba(255,215,0,0.05) !important;
+    background: #000000 !important;
     border-radius: 10px 10px 0 0 !important;
     color: #888 !important;
     font-family: 'JetBrains Mono', monospace !important;
     font-weight: 600 !important;
 }
 [aria-selected="true"][data-baseweb="tab"] {
-    background: rgba(255,215,0,0.15) !important;
-    color: #FFD700 !important;
-    border-bottom: 2px solid #FFD700 !important;
+    background: #000000 !important;
+    color: #d4af37 !important;
+    border-bottom: 2px solid #b08d2f !important;
 }
 
 /* ── Scrollbar ──────────────────────────────────────────── */
@@ -225,7 +197,7 @@ header    { visibility: hidden; }
 [data-testid="stNumberInput"] input,
 [data-testid="stSelectbox"] select {
     background: #111111 !important;
-    border: 1px solid #FFD700 !important;
+    border: 1px solid #b08d2f !important;
     color: #ffffff !important;
     border-radius: 8px !important;
 }
@@ -326,13 +298,13 @@ def get_conf_label(conf):
 def get_conf_breakdown(conf, base, eur_add, eur_mom, zar_add, zar_mom, vol_adj):
     """Detailed confidence breakdown for debugging"""
     return f"""
-    <div style="background:#000;border:1px solid #FFD700;border-radius:8px;padding:10px;font-size:11px;margin-top:8px;">
-    <div style="color:#FFD700;margin-bottom:5px;">📊 CONF BREAKDOWN:</div>
+    <div style="background:#000;border:1px solid #b08d2f;border-radius:8px;padding:10px;font-size:11px;margin-top:8px;">
+    <div style="color:#b08d2f;margin-bottom:5px;">📊 CONF BREAKDOWN:</div>
     <div>🥇 Base Setup: +{base}%</div>
     <div>🇪🇺 EUR Signal: +{eur_add}% | Momentum: +{eur_mom}%</div>
     <div>💱 ZAR Signal: +{zar_add}% | Momentum: +{zar_mom}%</div>
     <div>🌪️ Volatility Adj: +{vol_adj:.1f}%</div>
-    <div style="border-top:1px solid #FFD700;margin-top:5px;padding-top:5px;color:#00e676;font-weight:bold;">TOTAL: {conf}%</div>
+    <div style="border-top:1px solid #b08d2f;margin-top:5px;padding-top:5px;color:#00e676;font-weight:bold;">TOTAL: {conf}%</div>
     </div>
     """
 
@@ -422,19 +394,19 @@ with st.sidebar:
     st.markdown(f'<div class="sb-nav-item">📅 {now.strftime("%a %d %b %Y")}</div>', unsafe_allow_html=True)
 
     st.markdown('<hr class="sb-divider"><div class="sb-section">📊 Markets</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="sb-nav-item">🥇 XAUUSD &nbsp;<b style="color:#FFD700">${price:,.2f}</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-nav-item">🥇 XAUUSD &nbsp;<b style="color:#b08d2f">${price:,.2f}</b></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sb-nav-item">🇪🇺 EURUSD &nbsp;<b style="color:#aaa">{eur_price:.5f}</b> <span style="color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#666"}">({eur_sig})</span></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sb-nav-item">💱 USDZAR &nbsp;<b style="color:#aaa">R{zar_price:.4f}</b> <span style="color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#666"}">({zar_sig})</span></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sb-nav-item">💵 DXY &nbsp;<b style="color:#aaa">{dxy:.2f}</b> <span style="color:{"#00e676" if dxy_chg<0 else "#ff5252"}">{dxy_chg:+.2f}%</span></div>', unsafe_allow_html=True)
 
     st.markdown('<hr class="sb-divider"><div class="sb-section">⚠️ Risk State</div>', unsafe_allow_html=True)
-    loss_color = "#ff1744" if st.session_state.losses >= 2 else "#FFD700" if st.session_state.losses == 1 else "#00e676"
+    loss_color = "#ff1744" if st.session_state.losses >= 2 else "#b08d2f" if st.session_state.losses == 1 else "#00e676"
     st.markdown(f'<div class="sb-nav-item">Consecutive Losses: <b style="color:{loss_color}">{st.session_state.losses}/2</b></div>', unsafe_allow_html=True)
     if st.session_state.losses >= 2:
         st.markdown('<div class="sb-nav-item" style="border-color:#ff1744;color:#ff5252;">🔒 KILL-SWITCH ACTIVE</div>', unsafe_allow_html=True)
 
     st.markdown('<hr class="sb-divider"><div class="sb-section">🔗 Links</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sb-nav-item"><a href="https://hfmbot-8hxcdrycoldue48qs2eoxy.streamlit.app/" target="_blank" style="color:#FFD700;text-decoration:none;">🌐 Live App ↗</a></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sb-nav-item"><a href="https://hfmbot-8hxcdrycoldue48qs2eoxy.streamlit.app/" target="_blank" style="color:#b08d2f;text-decoration:none;">🌐 Live App ↗</a></div>', unsafe_allow_html=True)
 
     st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
     st.markdown('<div style="text-align:center;font-size:9px;color:#333;margin-top:8px;">MARONG STOIC BOT v2.0<br>Powered by yfinance · TradingView</div>', unsafe_allow_html=True)
@@ -451,9 +423,9 @@ st.markdown(f"""
     </div>
   </div>
   <div style="text-align:right;">
-    <div style="font-size:22px;font-weight:800;color:#FFD700;font-variant-numeric:tabular-nums;">{now.strftime('%H:%M:%S')}</div>
+    <div style="font-size:22px;font-weight:800;color:#b08d2f;font-variant-numeric:tabular-nums;">{now.strftime('%H:%M:%S')}</div>
     <div style="font-size:10px;color:#555;letter-spacing:1px;">SOUTH AFRICA STANDARD TIME</div>
-    <div style="margin-top:4px;"><span style="color:{_signal_color};font-size:12px;font-weight:700;">{_signal_label}</span>&nbsp;&nbsp;<span style="font-size:10px;color:#444;">CONF&nbsp;<b style="color:#FFD700;">{conf}%</b></span></div>
+    <div style="margin-top:4px;"><span style="color:{_signal_color};font-size:12px;font-weight:700;">{_signal_label}</span>&nbsp;&nbsp;<span style="font-size:10px;color:#444;">CONF&nbsp;<b style="color:#b08d2f;">{conf}%</b></span></div>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -552,20 +524,20 @@ with right:
     rr_v = float(rr.split(":")[1])
     risk_amt = bal_usd * risk/100
     lots = max(0.01, min(risk_amt/((atr*1.5)*10), 2.0))
-    st.markdown(f'<div style="margin-top:12px;background:#000;border-radius:10px;padding:12px;border:1px solid #FFD700;">USD Risk <span class="gold-text">${risk_amt:.2f}</span> ≈ R{risk_amt*zar_price:.2f}<br>Reward ${risk_amt*rr_v:.2f} | Lots {lots:.2f}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="margin-top:12px;background:#000;border-radius:10px;padding:12px;border:1px solid #b08d2f;">USD Risk <span class="gold-text">${risk_amt:.2f}</span> ≈ R{risk_amt*zar_price:.2f}<br>Reward ${risk_amt*rr_v:.2f} | Lots {lots:.2f}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">VOTE SYSTEM</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">🥇 GOLD: {"BUY" if agree_buy else "SELL" if agree_sell else "WAIT"} (50%)</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">🇪🇺 EURUSD: {eur_sig} (25%) - Must match Gold</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">💱 USDZAR: {zar_sig} - Need <b>SELL</b> for Gold BUY (Rand Strong = Good)</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">🥇 GOLD: {"BUY" if agree_buy else "SELL" if agree_sell else "WAIT"} (50%)</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">🇪🇺 EURUSD: {eur_sig} (25%) - Must match Gold</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">💱 USDZAR: {zar_sig} - Need <b>SELL</b> for Gold BUY (Rand Strong = Good)</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">📊 SIGNAL STRENGTH</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">Gold RSI: {gold_rsi:.1f} {"⚡ Overbought" if gold_rsi>70 else "⚠️ Oversold" if gold_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">EUR RSI: {eur_rsi:.1f} {"⚡ Overbought" if eur_rsi>70 else "⚠️ Oversold" if eur_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">ZAR RSI: {zar_rsi:.1f} {"⚡ Overbought" if zar_rsi>70 else "⚠️ Oversold" if zar_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">Gold RSI: {gold_rsi:.1f} {"⚡ Overbought" if gold_rsi>70 else "⚠️ Oversold" if gold_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">EUR RSI: {eur_rsi:.1f} {"⚡ Overbought" if eur_rsi>70 else "⚠️ Oversold" if eur_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">ZAR RSI: {zar_rsi:.1f} {"⚡ Overbought" if zar_rsi>70 else "⚠️ Oversold" if zar_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">⚠️ LOSS TRACKER</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #b08d2f;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -594,5 +566,5 @@ with right:
     if st.session_state.trade_history:
         st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">📝 TRADE HISTORY</div>', unsafe_allow_html=True)
         for trade in reversed(st.session_state.trade_history[-5:]):  # Show last 5 trades
-            st.markdown(f'<div style="background:#000;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;border:1px solid #FFD700;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="background:#000;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;border:1px solid #b08d2f;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
