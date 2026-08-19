@@ -5,26 +5,26 @@ import xml.etree.ElementTree as ET
 from streamlit_autorefresh import st_autorefresh
 from pathlib import Path
 
-# ── Page config ────────────────────────────────────────────────────────────────
+# ── Page config ──────────────────────────────────────────────────────────────[...]
 _LOGO_PATH = Path(__file__).parent / "logo.png"
 _logo_b64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode() if _LOGO_PATH.exists() else ""
 _page_icon = f"data:image/png;base64,{_logo_b64}" if _logo_b64 else "⚔️"
 
 st.set_page_config(
-    page_title="MARONG STOIC BOT SA",
+    page_title="MARONG STOIC BOT",
     page_icon=_page_icon,
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         "Get Help": "https://hfmbot-8hxcdrycoldue48qs2eoxy.streamlit.app/",
         "Report a bug": None,
-        "About": "**MARONG STOIC BOT** — SA Edition 🇿🇦\nPowered by yfinance & TradingView",
+        "About": "**MARONG STOIC BOT**\nPowered by yfinance & TradingView",
     },
 )
 SAST = pytz.timezone("Africa/Johannesburg")
 st_autorefresh(interval=1000, key="clock")
 
-# ── Global CSS / Shell ─────────────────────────────────────────────────────────
+# ── Global CSS / Shell ────────────────────────────────────────────────────────[...]
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap');
@@ -32,24 +32,23 @@ st.markdown("""
 /* ── Base ──────────────────────────────────────────────── */
 html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important; }
 .stApp {
-    background: radial-gradient(ellipse at top, #0d0d12 0%, #08080a 60%);
-    color: #e0e0e0;
+    background: #000000;
+    color: #ffffff;
     font-family: 'JetBrains Mono', monospace;
 }
 
 /* ── Sidebar shell ─────────────────────────────────────── */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0c0c10 0%, #111116 100%) !important;
-    border-right: 1px solid rgba(255,215,0,0.18) !important;
-    box-shadow: 4px 0 24px rgba(255,215,0,0.06);
+    background: #000000 !important;
+    border-right: 1px solid #FFD700 !important;
+    box-shadow: 4px 0 24px rgba(255,215,0,0.15);
 }
 [data-testid="stSidebar"] > div:first-child { padding-top: 0 !important; }
 
 /* ── Top navigation bar ─────────────────────────────────── */
 .topbar {
-    background: linear-gradient(90deg, #0a0a0d 0%, #111116 50%, #0a0a0d 100%);
-    border-bottom: 2px solid;
-    border-image: linear-gradient(90deg, transparent, #FFD700, #FFA500, #FFD700, transparent) 1;
+    background: #000000;
+    border-bottom: 2px solid #FFD700;
     padding: 14px 24px;
     display: flex;
     justify-content: space-between;
@@ -66,15 +65,15 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
         90deg,
         transparent,
         transparent 40px,
-        rgba(255,215,0,0.015) 40px,
-        rgba(255,215,0,0.015) 41px
+        rgba(255,215,0,0.08) 40px,
+        rgba(255,215,0,0.08) 41px
     );
     pointer-events: none;
 }
 
 /* ── Logo in header ─────────────────────────────────────── */
-.logo-img { height: 52px; border-radius: 50%; border: 2px solid rgba(255,215,0,0.5); box-shadow: 0 0 16px rgba(255,215,0,0.3); }
-.logo-sm  { height: 100px; border-radius: 50%; border: 3px solid rgba(255,215,0,0.6); box-shadow: 0 0 30px rgba(255,215,0,0.25); display: block; margin: 0 auto 10px; }
+.logo-img { height: 52px; border-radius: 50%; border: 2px solid #FFD700; box-shadow: 0 0 16px rgba(255,215,0,0.4); }
+.logo-sm  { height: 100px; border-radius: 50%; border: 3px solid #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.35); display: block; margin: 0 auto 10px; }
 
 /* ── Gold shimmer text ──────────────────────────────────── */
 .gold-text {
@@ -89,74 +88,73 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
 
 /* ── Glass card ─────────────────────────────────────────── */
 .glass {
-    background: rgba(18,18,22,0.85);
+    background: rgba(0,0,0,0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,215,0,0.14);
+    border: 1px solid #FFD700;
     border-radius: 18px;
     padding: 18px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+    box-shadow: 0 4px 24px rgba(255,215,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 /* ── KPI card ───────────────────────────────────────────── */
 .kpi {
-    background: linear-gradient(145deg, #1a1a1e, #101012);
+    background: #000000;
     border-radius: 16px;
     padding: 18px;
-    border: 1px solid #1e1e22;
-    border-top: 2px solid rgba(255,215,0,0.35);
-    box-shadow: 0 0 18px rgba(255,215,0,0.07), 0 4px 12px rgba(0,0,0,0.6);
+    border: 2px solid #FFD700;
+    box-shadow: 0 0 18px rgba(255,215,0,0.2), 0 4px 12px rgba(0,0,0,0.6);
     transition: transform 0.2s, box-shadow 0.2s;
 }
-.kpi:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 28px rgba(255,215,0,0.18); }
-.kpi-val { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-.kpi-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+.kpi:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 28px rgba(255,215,0,0.35); }
+.kpi-val { font-size: 24px; font-weight: 800; color: #FFD700; letter-spacing: -0.5px; }
+.kpi-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
 
 /* ── Signal boxes ───────────────────────────────────────── */
 .buy-signal {
-    background: linear-gradient(135deg, #004d1f, #007a33);
+    background: #001a00;
     border: 2px solid #00e676;
     border-radius: 18px; padding: 24px; text-align: center;
     font-weight: 900; font-size: 22px; color: #00ff87;
-    box-shadow: 0 0 30px rgba(0,198,83,0.3);
+    box-shadow: 0 0 30px rgba(0,198,83,0.4);
     animation: pulse-green 2s ease-in-out infinite;
 }
-@keyframes pulse-green { 0%,100%{box-shadow:0 0 30px rgba(0,198,83,0.3)} 50%{box-shadow:0 0 50px rgba(0,230,118,0.5)} }
+@keyframes pulse-green { 0%,100%{box-shadow:0 0 30px rgba(0,198,83,0.4)} 50%{box-shadow:0 0 50px rgba(0,230,118,0.6)} }
 
 .sell-signal {
-    background: linear-gradient(135deg, #4d0010, #8b0020);
+    background: #1a0000;
     border: 2px solid #ff1744;
     border-radius: 18px; padding: 24px; text-align: center;
     font-weight: 900; font-size: 22px; color: #ff6b6b;
-    box-shadow: 0 0 30px rgba(255,23,68,0.3);
+    box-shadow: 0 0 30px rgba(255,23,68,0.4);
     animation: pulse-red 2s ease-in-out infinite;
 }
-@keyframes pulse-red { 0%,100%{box-shadow:0 0 30px rgba(255,23,68,0.3)} 50%{box-shadow:0 0 50px rgba(255,82,82,0.5)} }
+@keyframes pulse-red { 0%,100%{box-shadow:0 0 30px rgba(255,23,68,0.4)} 50%{box-shadow:0 0 50px rgba(255,82,82,0.6)} }
 
 .wait-signal {
-    background: linear-gradient(135deg, #0e0e12, #16161c);
-    border: 2px dashed #2a2a32;
+    background: #0a0a0a;
+    border: 2px dashed #333;
     border-radius: 18px; padding: 24px; text-align: center;
     color: #666;
 }
 
 .locked {
-    background: linear-gradient(135deg, #2a0a0a, #1a0a0a);
-    border: 1px solid #ff1744; border-radius: 18px; padding: 20px; text-align: center;
+    background: #1a0000;
+    border: 2px solid #ff1744; border-radius: 18px; padding: 20px; text-align: center;
 }
 
 .killswitch {
-    background: linear-gradient(135deg, #3d0000, #8b0000);
+    background: #4d0000;
     border: 2px solid #ff1744; border-radius: 18px; padding: 28px; text-align: center;
-    font-weight: 900; font-size: 18px; color: white;
+    font-weight: 900; font-size: 18px; color: #ff6b6b;
     animation: ks-pulse 1s ease-in-out infinite;
-    box-shadow: 0 0 40px rgba(255,23,68,0.4);
+    box-shadow: 0 0 40px rgba(255,23,68,0.5);
 }
 @keyframes ks-pulse { 0%,100%{opacity:1} 50%{opacity:0.75} }
 
 /* ── Confidence badges ──────────────────────────────────── */
-.conf-high    { background: linear-gradient(90deg,#00c853,#00e676); color:black; padding:8px 16px; border-radius:22px; font-weight:900; box-shadow:0 0 12px rgba(0,200,83,0.35); }
-.conf-mid     { background: #1e1e00; color:#FFD700; padding:8px 16px; border-radius:22px; font-weight:900; border:1px solid #FFD700; }
+.conf-high    { background: linear-gradient(90deg,#00c853,#00e676); color:#000; padding:8px 16px; border-radius:22px; font-weight:900; box-shadow:0 0 12px rgba(0,200,83,0.35); }
+.conf-mid     { background: #1a1a00; color:#FFD700; padding:8px 16px; border-radius:22px; font-weight:900; border:1px solid #FFD700; }
 .conf-low     { background: #1a1a1a; color:#888; padding:8px 16px; border-radius:22px; border:1px solid #333; }
 .conf-verylow { background: #1a0505; color:#ff5252; padding:8px 16px; border-radius:22px; border:1px solid #ff5252; }
 
@@ -182,8 +180,8 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
 
 /* ── Sidebar nav items ──────────────────────────────────── */
 .sb-nav-item {
-    background: rgba(255,215,0,0.04);
-    border: 1px solid rgba(255,215,0,0.1);
+    background: rgba(255,215,0,0.05);
+    border: 1px solid #FFD700;
     border-radius: 10px;
     padding: 10px 14px;
     margin-bottom: 8px;
@@ -191,9 +189,9 @@ html, body, [class*="css"] { font-family: 'JetBrains Mono', monospace !important
     color: #ccc;
     cursor: default;
 }
-.sb-nav-item:hover { background: rgba(255,215,0,0.09); color: #FFD700; }
+.sb-nav-item:hover { background: rgba(255,215,0,0.12); color: #FFD700; }
 .sb-section { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 6px; }
-.sb-divider  { border: none; border-top: 1px solid rgba(255,215,0,0.12); margin: 14px 0; }
+.sb-divider  { border: none; border-top: 1px solid #FFD700; margin: 14px 0; }
 .status-dot-green { display:inline-block; width:8px; height:8px; background:#00e676; border-radius:50%; margin-right:6px; box-shadow:0 0 6px #00e676; }
 .status-dot-red   { display:inline-block; width:8px; height:8px; background:#ff1744; border-radius:50%; margin-right:6px; box-shadow:0 0 6px #ff1744; }
 
@@ -205,30 +203,30 @@ header    { visibility: hidden; }
 /* ── Streamlit tab styling ──────────────────────────────── */
 [data-baseweb="tab-list"] { background: transparent !important; gap: 4px; }
 [data-baseweb="tab"] {
-    background: rgba(255,215,0,0.04) !important;
+    background: rgba(255,215,0,0.05) !important;
     border-radius: 10px 10px 0 0 !important;
     color: #888 !important;
     font-family: 'JetBrains Mono', monospace !important;
     font-weight: 600 !important;
 }
 [aria-selected="true"][data-baseweb="tab"] {
-    background: rgba(255,215,0,0.12) !important;
+    background: rgba(255,215,0,0.15) !important;
     color: #FFD700 !important;
     border-bottom: 2px solid #FFD700 !important;
 }
 
 /* ── Scrollbar ──────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #0a0a0c; }
-::-webkit-scrollbar-thumb { background: #2a2a2e; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a3e; }
+::-webkit-scrollbar-track { background: #000000; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
 
 /* ── Input widgets ──────────────────────────────────────── */
 [data-testid="stNumberInput"] input,
 [data-testid="stSelectbox"] select {
-    background: #111116 !important;
-    border: 1px solid rgba(255,215,0,0.2) !important;
-    color: #e0e0e0 !important;
+    background: #111111 !important;
+    border: 1px solid #FFD700 !important;
+    color: #ffffff !important;
     border-radius: 8px !important;
 }
 </style>
@@ -313,9 +311,9 @@ def send_alert(msg):
 def get_conf_label(conf):
     """Generate confidence label with enhanced styling"""
     if conf >= 85:
-        return f'<span class="conf-high">⚡ CONF {conf}% ELITE 🇿🇦</span>'
+        return f'<span class="conf-high">⚡ CONF {conf}% ELITE</span>'
     elif conf >= 75:
-        return f'<span class="conf-high">✅ CONF {conf}% HIGH 🇿🇦</span>'
+        return f'<span class="conf-high">✅ CONF {conf}% HIGH</span>'
     elif conf >= 60:
         return f'<span class="conf-mid">⚠️ CONF {conf}% MED</span>'
     elif conf >= 50:
@@ -328,13 +326,13 @@ def get_conf_label(conf):
 def get_conf_breakdown(conf, base, eur_add, eur_mom, zar_add, zar_mom, vol_adj):
     """Detailed confidence breakdown for debugging"""
     return f"""
-    <div style="background:#0a0a0c;border:1px solid #333;border-radius:8px;padding:10px;font-size:11px;margin-top:8px;">
+    <div style="background:#000;border:1px solid #FFD700;border-radius:8px;padding:10px;font-size:11px;margin-top:8px;">
     <div style="color:#FFD700;margin-bottom:5px;">📊 CONF BREAKDOWN:</div>
     <div>🥇 Base Setup: +{base}%</div>
     <div>🇪🇺 EUR Signal: +{eur_add}% | Momentum: +{eur_mom}%</div>
-    <div>🇿🇦 ZAR Signal: +{zar_add}% | Momentum: +{zar_mom}%</div>
+    <div>💱 ZAR Signal: +{zar_add}% | Momentum: +{zar_mom}%</div>
     <div>🌪️ Volatility Adj: +{vol_adj:.1f}%</div>
-    <div style="border-top:1px solid #333;margin-top:5px;padding-top:5px;color:#00e676;font-weight:bold;">TOTAL: {conf}%</div>
+    <div style="border-top:1px solid #FFD700;margin-top:5px;padding-top:5px;color:#00e676;font-weight:bold;">TOTAL: {conf}%</div>
     </div>
     """
 
@@ -388,7 +386,7 @@ def record_trade_outcome(direction, entry, sl, tp, outcome, conf):
 # DATA COLLECTION
 df_gold, price, atr, ema50, ema200, gold_rsi, gold_macd, gold_momentum, gold_volatility = get_gold()
 eur_price, eur_sig, eur20, eur100, eur_rsi, eur_atr, eur_momentum = get_forex("EURUSD=X")
-zar_price, zar_sig, zar20, zar100, zar_rsi, zar_atr, zar_momentum = get_forex("USDZAR=X")  # SA PAIR
+zar_price, zar_sig, zar20, zar100, zar_rsi, zar_atr, zar_momentum = get_forex("USDZAR=X")
 dxy, dxy_chg, dxy_ema20, dxy_momentum = get_dxy()
 now = datetime.now(SAST)
 
@@ -401,7 +399,7 @@ session_ok = 10 <= now.hour < 20
 agree_buy = setup_bull and fund_bull and session_ok
 agree_sell = setup_bear and fund_bear and session_ok
 
-# SA CONFIDENCE
+# CONFIDENCE
 base_conf = 50 if (agree_buy or agree_sell) else 0
 eur_signal_bonus = 15 if ((eur_sig=="BUY" and agree_buy) or (eur_sig=="SELL" and agree_sell)) else 0
 eur_momentum_bonus = 10 if ((eur_momentum > 0 and agree_buy) or (eur_momentum < 0 and agree_sell)) else 0
@@ -410,12 +408,11 @@ zar_momentum_bonus = 10 if ((zar_momentum < 0 and agree_buy) or (zar_momentum > 
 vol_adjustment = min(gold_volatility / 5.0, 5)
 conf = min(int(base_conf + eur_signal_bonus + eur_momentum_bonus + zar_signal_bonus + zar_momentum_bonus + vol_adjustment), 100)
 
-# ── SIDEBAR ────────────────────────────────────────────────────────────────────
+# ── SIDEBAR ───────────────────────────────────────────────────────────────────[...]
 with st.sidebar:
     if _logo_b64:
         st.markdown(f'<img src="data:image/png;base64,{_logo_b64}" class="logo-sm" />', unsafe_allow_html=True)
     st.markdown('<div style="text-align:center;"><span class="gold-text" style="font-size:18px;font-weight:800;">MARONG STOIC BOT</span></div>', unsafe_allow_html=True)
-    st.markdown('<div style="text-align:center;margin-top:4px;"><span style="background:#007A4B;color:white;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;">🇿🇦 SA EDITION</span></div>', unsafe_allow_html=True)
     st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
 
     # Live status
@@ -426,8 +423,8 @@ with st.sidebar:
 
     st.markdown('<hr class="sb-divider"><div class="sb-section">📊 Markets</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sb-nav-item">🥇 XAUUSD &nbsp;<b style="color:#FFD700">${price:,.2f}</b></div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="sb-nav-item">🇪🇺 EURUSD &nbsp;<b style="color:#aaa">{eur_price:.5f}</b> <span style="color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#666"}">{eur_sig}</span></div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="sb-nav-item">🇿🇦 USDZAR &nbsp;<b style="color:#aaa">R{zar_price:.4f}</b> <span style="color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#666"}">{zar_sig}</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-nav-item">🇪🇺 EURUSD &nbsp;<b style="color:#aaa">{eur_price:.5f}</b> <span style="color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#666"}">({eur_sig})</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sb-nav-item">💱 USDZAR &nbsp;<b style="color:#aaa">R{zar_price:.4f}</b> <span style="color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#666"}">({zar_sig})</span></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sb-nav-item">💵 DXY &nbsp;<b style="color:#aaa">{dxy:.2f}</b> <span style="color:{"#00e676" if dxy_chg<0 else "#ff5252"}">{dxy_chg:+.2f}%</span></div>', unsafe_allow_html=True)
 
     st.markdown('<hr class="sb-divider"><div class="sb-section">⚠️ Risk State</div>', unsafe_allow_html=True)
@@ -442,7 +439,7 @@ with st.sidebar:
     st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
     st.markdown('<div style="text-align:center;font-size:9px;color:#333;margin-top:8px;">MARONG STOIC BOT v2.0<br>Powered by yfinance · TradingView</div>', unsafe_allow_html=True)
 
-# ── TOP BAR HEADER ─────────────────────────────────────────────────────────────
+# ── TOP BAR HEADER ────────────────────────────────────────────────────────────[...]
 _signal_color = "#00e676" if agree_buy else "#ff1744" if agree_sell else "#888"
 _signal_label = "🟢 BUY BIAS" if agree_buy else "🔴 SELL BIAS" if agree_sell else "⚪ WAITING"
 st.markdown(f"""
@@ -451,23 +448,22 @@ st.markdown(f"""
     {"<img src='data:image/png;base64," + _logo_b64 + "' class='logo-img' />" if _logo_b64 else ""}
     <div>
       <span class="gold-text" style="font-size:26px;font-weight:800;letter-spacing:-0.5px;">MARONG STOIC BOT</span>
-      <span style="background:#007A4B;color:white;padding:3px 10px;border-radius:6px;margin-left:10px;font-size:12px;font-weight:700;vertical-align:middle;">🇿🇦 SA EDITION</span>
     </div>
   </div>
   <div style="text-align:right;">
     <div style="font-size:22px;font-weight:800;color:#FFD700;font-variant-numeric:tabular-nums;">{now.strftime('%H:%M:%S')}</div>
     <div style="font-size:10px;color:#555;letter-spacing:1px;">SOUTH AFRICA STANDARD TIME</div>
-    <div style="margin-top:4px;"><span style="color:{_signal_color};font-size:12px;font-weight:700;">{_signal_label}</span>&nbsp;&nbsp;<span style="font-size:10px;color:#444;">CONF&nbsp;<b style="color:#FFD700">{conf}%</b></span></div>
+    <div style="margin-top:4px;"><span style="color:{_signal_color};font-size:12px;font-weight:700;">{_signal_label}</span>&nbsp;&nbsp;<span style="font-size:10px;color:#444;">CONF&nbsp;<b style="color:#FFD700;">{conf}%</b></span></div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 k1,k2,k3,k4,k5 = st.columns(5)
 k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size:12px;color:#888;">{ema50:.0f}/{ema200:.0f} | RSI {gold_rsi:.0f}</div></div>', unsafe_allow_html=True)
-k2.markdown(f'<div class="kpi"><div class="kpi-label">EURUSD CONFIRM</div><div class="kpi-val">{eur_price:.5f}</div><div style="font-size:12px;color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#999"};">{eur_sig} | RSI {eur_rsi:.0f}</div></div>', unsafe_allow_html=True)
-k3.markdown(f'<div class="kpi"><div class="kpi-label">USDZAR HOME 🇿🇦</div><div class="kpi-val">R{zar_price:.4f}</div><div style="font-size:12px;color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#999"};">{zar_sig} | RSI {zar_rsi:.0f}</div></div>', unsafe_allow_html=True)
-k4.markdown(f'<div class="kpi"><div class="kpi-label">DXY FUND</div><div class="kpi-val">{dxy:.2f}</div><div style="font-size:12px;color:{"#00e676" if dxy_chg<0 else "#ff5252"}>{dxy_chg:+.2f}% | MOM {dxy_momentum:+.1f}</div></div>', unsafe_allow_html=True)
-k5.markdown(f'<div class="kpi"><div class="kpi-label">LOSSES</div><div class="kpi-val">{st.session_state.losses}/2</div><div style="font-size:12px;color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};">{"🔒 KILL-SWITCH" if st.session_state.losses >= 2 else "Status OK"}</div></div>', unsafe_allow_html=True)
+k2.markdown(f'<div class="kpi"><div class="kpi-label">EURUSD CONFIRM</div><div class="kpi-val">{eur_price:.5f}</div><div style="font-size:12px;color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#888"};">{eur_sig}</div></div>', unsafe_allow_html=True)
+k3.markdown(f'<div class="kpi"><div class="kpi-label">USDZAR HOME</div><div class="kpi-val">R{zar_price:.4f}</div><div style="font-size:12px;color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#888"};">{zar_sig}</div></div>', unsafe_allow_html=True)
+k4.markdown(f'<div class="kpi"><div class="kpi-label">DXY FUND</div><div class="kpi-val">{dxy:.2f}</div><div style="font-size:12px;color:{"#00e676" if dxy_chg<0 else "#ff5252"}>{dxy_chg:+.2f}%</div></div>', unsafe_allow_html=True)
+k5.markdown(f'<div class="kpi"><div class="kpi-label">LOSSES</div><div class="kpi-val">{st.session_state.losses}/2</div><div style="font-size:12px;color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};">Loss State</div></div>', unsafe_allow_html=True)
 
 # Confidence labels (computed once above, used here)
 conf_label = get_conf_label(conf)
@@ -485,12 +481,12 @@ if st.session_state.losses >= 2:
 
 left, right = st.columns([1.7,1])
 with left:
-    tab1, tab2, tab3 = st.tabs(["⚔️ GOLD CORE", "🇪🇺 EURUSD", "🇿🇦 USDZAR - YOUR RAND"])
+    tab1, tab2, tab3 = st.tabs(["⚔️ GOLD CORE", "🇪🇺 EURUSD", "💱 USDZAR"])
     with tab1:
-        st.markdown(f'<div class="glass"> <div style="display:flex;justify-content:space-between;"><div class="kpi-label">SA SMART LOGIC</div><div>{conf_label}</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="glass"> <div style="display:flex;justify-content:space-between;"><div class="kpi-label">SMART LOGIC</div><div>{conf_label}</div></div>', unsafe_allow_html=True)
         st.markdown(conf_breakdown, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        html="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AXAUUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
+        html="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AXAUUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg" style="width:100%;height:100%;border:0;margin:0;padding:0;" frameborder="0" allowtransparency="true" scrolling="no"></iframe></div>"""
         st.components.v1.html(html, height=380)
         st.markdown('</div>', unsafe_allow_html=True)
         # Gold metrics
@@ -503,7 +499,7 @@ with left:
         </div>
         """, unsafe_allow_html=True)
     with tab2:
-        html2="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AEURUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
+        html2="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AEURUSD&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg" style="width:100%;height:100%;border:0;margin:0;padding:0;" frameborder="0" allowtransparency="true" scrolling="no"></iframe></div>"""
         st.components.v1.html(html2, height=380)
         st.markdown(f"""
         <div class="glass">
@@ -514,12 +510,12 @@ with left:
         </div>
         """, unsafe_allow_html=True)
     with tab3:
-        html3="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AUSDZAR&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg&hide_side_toolbar=1" style="width: 100%; height: 100%; border: none;"></iframe></div>"""
+        html3="""<div style="height:360px;"><iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview&symbol=OANDA%3AUSDZAR&interval=15&theme=dark&style=1&timezone=Africa%2FJohannesburg" style="width:100%;height:100%;border:0;margin:0;padding:0;" frameborder="0" allowtransparency="true" scrolling="no"></iframe></div>"""
         st.components.v1.html(html3, height=380)
         st.markdown(f"""
         <div class="glass">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>🇿🇦 Price: R{zar_price:.4f}<br>📊 EMA20/100: {zar20:.4f}/{zar100:.4f}<br>💪 RSI: {zar_rsi:.1f}</div>
+        <div>💱 Price: R{zar_price:.4f}<br>📊 EMA20/100: {zar20:.4f}/{zar100:.4f}<br>💪 RSI: {zar_rsi:.1f}</div>
         <div>📈 Momentum: {zar_momentum:+.6f}<br>🎯 Signal: {zar_sig}<br>💰 (SELL=Strong Rand=Good)</div>
         </div>
         </div>
@@ -527,49 +523,49 @@ with left:
 
     st.write("")
     if len(st.session_state.trades)>=4:
-        st.markdown(f'<div class="locked"><h3>🔒 SA PORTFOLIO LOCKED 4/4</h3><p>{", ".join(st.session_state.trades)}</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="locked"><h3>🔒 PORTFOLIO LOCKED 4/4</h3><p>{", ".join(st.session_state.trades)}</p></div>', unsafe_allow_html=True)
     elif agree_buy:
         sl, tp = calculate_levels(price, atr, True, rr_v if "rr_v" in locals() else 2.5)
-        badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
+        badge = "HIGH CONVICTION" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
-        if st.button("✅ EXECUTE BUY - SA EDITION"):
+        if st.button("✅ EXECUTE BUY"):
             st.session_state.trades.append(f"BUY {now.strftime('%H:%M')} {price:.2f} {conf}%")
-            send_alert(f"⚔️ *SA EDITION EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
+            send_alert(f"⚔️ *SIGNAL EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 trades")
             st.rerun()
     elif agree_sell:
         sl, tp = calculate_levels(price, atr, False, rr_v if "rr_v" in locals() else 2.5)
-        badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
+        badge = "HIGH CONVICTION" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
-        if st.button("✅ EXECUTE SELL - SA EDITION"):
+        if st.button("✅ EXECUTE SELL"):
             st.session_state.trades.append(f"SELL {now.strftime('%H:%M')} {price:.2f} {conf}%")
-            send_alert(f"⚔️ *SA EDITION EXECUTED*\n🔴 SELL XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
+            send_alert(f"⚔️ *SIGNAL EXECUTED*\n🔴 SELL XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 trades")
             st.rerun()
     else:
-        st.markdown(f'<div class="wait-signal"><h3>⚪ STOIC WAIT - SA CHECK</h3><p>Gold {setup_bull or setup_bear} | DXY {fund_bull or fund_bear} | EUR {eur_sig} | ZAR {zar_sig} (Need SELL for BUY) | VOL {gold_volatility:.4f}</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="wait-signal"><h3>⚪ STOIC WAIT</h3><p>Analyzing: Gold {setup_bull or setup_bear} | DXY {fund_bull or fund_bear} | EUR {eur_sig} | ZAR {zar_sig}</p></div>', unsafe_allow_html=True)
 
 with right:
-    st.markdown('<div class="glass"><div class="kpi-label">🇿🇦 RAND CALCULATOR</div>', unsafe_allow_html=True)
-    bal_usd = st.number_input("Balance $ (Cent)", 10.0, 50000.0, 500.0)
-    st.caption(f"≈ R{bal_usd*zar_price:,.2f} at R{zar_price:.2f}/$")
+    st.markdown('<div class="glass"><div class="kpi-label">💵 BALANCE CALCULATOR</div>', unsafe_allow_html=True)
+    bal_usd = st.number_input("Balance USD", 10.0, 50000.0, 500.0)
+    st.caption(f"≈ R{bal_usd*zar_price:,.2f} at R{zar_price:.2f}/USD")
     risk = st.slider("Risk %", 0.5, 2.0, 1.0)
     rr = st.selectbox("RR", ["1:2","1:2.5","1:3"], index=1)
     rr_v = float(rr.split(":")[1])
     risk_amt = bal_usd * risk/100
     lots = max(0.01, min(risk_amt/((atr*1.5)*10), 2.0))
-    st.markdown(f'<div style="margin-top:12px;background:#111;border-radius:10px;padding:12px;">USD Risk <span class="gold-text">${risk_amt:.2f}</span> ≈ R{risk_amt*zar_price:.2f}<br>Reward ${risk_amt*rr_v:.2f} ≈ R{risk_amt*rr_v*zar_price:.2f}<br>Lots {lots:.2f}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="margin-top:12px;background:#000;border-radius:10px;padding:12px;border:1px solid #FFD700;">USD Risk <span class="gold-text">${risk_amt:.2f}</span> ≈ R{risk_amt*zar_price:.2f}<br>Reward ${risk_amt*rr_v:.2f} | Lots {lots:.2f}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">SA VOTE SYSTEM</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">🥇 GOLD: {"BUY" if agree_buy else "SELL" if agree_sell else "WAIT"} (50%)</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">🇪🇺 EURUSD: {eur_sig} (25%) - Must match Gold</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">🇿🇦 USDZAR: {zar_sig} - Need <b>SELL</b> for Gold BUY (Rand Strong = Good)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">VOTE SYSTEM</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">🥇 GOLD: {"BUY" if agree_buy else "SELL" if agree_sell else "WAIT"} (50%)</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">🇪🇺 EURUSD: {eur_sig} (25%) - Must match Gold</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">💱 USDZAR: {zar_sig} - Need <b>SELL</b> for Gold BUY (Rand Strong = Good)</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">📊 SIGNAL STRENGTH</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">Gold RSI: {gold_rsi:.1f} {"⚡ Overbought" if gold_rsi>70 else "⚠️ Oversold" if gold_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">EUR RSI: {eur_rsi:.1f} {"⚡ Overbought" if eur_rsi>70 else "⚠️ Oversold" if eur_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">ZAR RSI: {zar_rsi:.1f} {"⚡ Overbought" if zar_rsi>70 else "⚠️ Oversold" if zar_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">Gold RSI: {gold_rsi:.1f} {"⚡ Overbought" if gold_rsi>70 else "⚠️ Oversold" if gold_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">EUR RSI: {eur_rsi:.1f} {"⚡ Overbought" if eur_rsi>70 else "⚠️ Oversold" if eur_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">ZAR RSI: {zar_rsi:.1f} {"⚡ Overbought" if zar_rsi>70 else "⚠️ Oversold" if zar_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">⚠️ LOSS TRACKER</div>', unsafe_allow_html=True)
-    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#000;padding:10px;border-radius:8px;margin:5px 0;border:1px solid #FFD700;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -598,5 +594,5 @@ with right:
     if st.session_state.trade_history:
         st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">📝 TRADE HISTORY</div>', unsafe_allow_html=True)
         for trade in reversed(st.session_state.trade_history[-5:]):  # Show last 5 trades
-            st.markdown(f'<div style="background:#111;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="background:#000;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;border:1px solid #FFD700;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
