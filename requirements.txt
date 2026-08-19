@@ -3,3 +3,4 @@ pytz
 pandas
 yfinance
 streamlit-autorefresh
+flask
