@@ -29,6 +29,9 @@ st.markdown("""
 .conf-mid { background: #333; color:#FFD700; padding:8px 14px; border-radius:20px; font-weight:900; border:1px solid #FFD700; }
 .conf-low { background: #222; color:#888; padding:8px 14px; border-radius:20px; }
 .conf-verylow { background: #1a0a0a; color:#ff5252; padding:8px 14px; border-radius:20px; border:1px solid #ff5252; }
+.status-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin:16px 0 8px; }
+.status-item { background: linear-gradient(145deg, #1a1a1e, #121214); border-radius: 14px; padding: 14px; border: 1px solid #222; min-height: 92px; }
+.status-pill { display:inline-block; margin-top:8px; padding:6px 10px; border-radius:999px; font-size:11px; font-weight:800; letter-spacing:0.5px; }
 .stButton>button { background: linear-gradient(90deg,#D4AF37,#FFD700); color: black; font-weight: 900; height: 54px; border-radius: 12px; width: 100%; border: none; }
 #MainMenu, footer, header {visibility:hidden;}
 </style>
@@ -38,6 +41,9 @@ if "trades" not in st.session_state: st.session_state.trades=[]
 if "trade_history" not in st.session_state: st.session_state.trade_history = []
 if "losses" not in st.session_state: st.session_state.losses = 0
 if "last_reset" not in st.session_state: st.session_state.last_reset=datetime.now(SAST).date()
+if "balance_usd" not in st.session_state: st.session_state.balance_usd = 5000.0
+if "risk_pct" not in st.session_state: st.session_state.risk_pct = 1.0
+if "rr_label" not in st.session_state: st.session_state.rr_label = "1:2.5"
 if datetime.now(SAST).date()!=st.session_state.last_reset:
     st.session_state.trades=[]; st.session_state.losses = 0; st.session_state.last_reset=datetime.now(SAST).date()
 
@@ -185,6 +191,9 @@ def record_trade_outcome(direction, entry, sl, tp, outcome, conf):
     
     return trade_record
 
+def format_usd(amount):
+    return f"${amount:,.2f}"
+
 # DATA COLLECTION
 df_gold, price, atr, ema50, ema200, gold_rsi, gold_macd, gold_momentum, gold_volatility = get_gold()
 eur_price, eur_sig, eur20, eur100, eur_rsi, eur_atr, eur_momentum = get_forex("EURUSD=X")
@@ -199,6 +208,7 @@ st.markdown(f"""
 <div style="text-align:right;"><span style="color:#FFD700;font-weight:700;">{now.strftime('%H:%M:%S')}</span> SAST<br><span style="font-size:11px;color:#00e676;">● RAND SMART ACTIVE</span></div>
 </div>
 """, unsafe_allow_html=True)
+account_status_container = st.container()
 
 k1,k2,k3,k4,k5 = st.columns(5)
 k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size:12px;color:#888;">{ema50:.0f}/{ema200:.0f} | RSI {gold_rsi:.0f}</div></div>', unsafe_allow_html=True)
@@ -288,7 +298,7 @@ with left:
     if len(st.session_state.trades)>=4:
         st.markdown(f'<div class="locked"><h3>🔒 SA PORTFOLIO LOCKED 4/4</h3><p>{", ".join(st.session_state.trades)}</p></div>', unsafe_allow_html=True)
     elif agree_buy:
-        sl, tp = calculate_levels(price, atr, True, rr_v if "rr_v" in locals() else 2.5)
+        sl, tp = calculate_levels(price, atr, True, float(st.session_state.rr_label.split(":")[1]))
         badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE BUY - SA EDITION"):
@@ -296,7 +306,7 @@ with left:
             send_alert(f"⚔️ *SA EDITION EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
             st.rerun()
     elif agree_sell:
-        sl, tp = calculate_levels(price, atr, False, rr_v if "rr_v" in locals() else 2.5)
+        sl, tp = calculate_levels(price, atr, False, float(st.session_state.rr_label.split(":")[1]))
         badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE SELL - SA EDITION"):
@@ -308,10 +318,11 @@ with left:
 
 with right:
     st.markdown('<div class="glass"><div class="kpi-label">🇿🇦 RAND CALCULATOR</div>', unsafe_allow_html=True)
-    bal_usd = st.number_input("Balance $ (Cent)", 10.0, 50000.0, 500.0)
-    st.caption(f"≈ R{bal_usd*zar_price:,.2f} at R{zar_price:.2f}/$")
-    risk = st.slider("Risk %", 0.5, 2.0, 1.0)
-    rr = st.selectbox("RR", ["1:2","1:2.5","1:3"], index=1)
+    bal_usd = st.number_input("Balance $", 100.0, 500000.0, 5000.0, key="balance_usd")
+    st.caption(f"{format_usd(bal_usd)} ≈ R{bal_usd*zar_price:,.2f} at R{zar_price:.2f}/$")
+    risk = st.slider("Risk %", 0.5, 2.0, 1.0, key="risk_pct")
+    rr_options = ["1:2","1:2.5","1:3"]
+    rr = st.selectbox("RR", rr_options, index=rr_options.index(st.session_state.rr_label), key="rr_label")
     rr_v = float(rr.split(":")[1])
     risk_amt = bal_usd * risk/100
     lots = max(0.01, min(risk_amt/((atr*1.5)*10), 2.0))
@@ -359,3 +370,43 @@ with right:
         for trade in reversed(st.session_state.trade_history[-5:]):  # Show last 5 trades
             st.markdown(f'<div style="background:#111;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+buy_count = sum(1 for trade in st.session_state.trades if trade.startswith("BUY"))
+sell_count = sum(1 for trade in st.session_state.trades if trade.startswith("SELL"))
+trade_count = buy_count + sell_count
+risk_amt = bal_usd * risk / 100
+equity = max(bal_usd - (st.session_state.losses * risk_amt), 0.0)
+available_margin = max(equity - risk_amt, 0.0)
+
+if st.session_state.losses >= 2 or trade_count >= 4 or risk >= 1.8:
+    account_health = "CRITICAL"
+    account_health_color = "#ff5252"
+    account_health_bg = "rgba(255, 82, 82, 0.18)"
+elif st.session_state.losses == 1 or risk >= 1.3:
+    account_health = "WARNING"
+    account_health_color = "#FFD54F"
+    account_health_bg = "rgba(255, 213, 79, 0.16)"
+else:
+    account_health = "HEALTHY"
+    account_health_color = "#00e676"
+    account_health_bg = "rgba(0, 230, 118, 0.16)"
+
+with account_status_container:
+    st.markdown(f"""
+    <div class="glass" style="margin-top:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+    <div class="kpi-label">ACCOUNT TOTALS STATUS</div>
+    <div style="font-size:13px;color:#999;">Live USD overview synced to balance, risk and trade activity</div>
+    </div>
+    <div class="status-pill" style="background:{account_health_bg};color:{account_health_color};border:1px solid {account_health_color};">{account_health}</div>
+    </div>
+    <div class="status-grid">
+    <div class="status-item"><div class="kpi-label">Total Account Balance</div><div class="kpi-val">{format_usd(bal_usd)}</div><div style="font-size:12px;color:#888;">Cash balance in USD</div></div>
+    <div class="status-item"><div class="kpi-label">Risk Amount</div><div class="kpi-val">{format_usd(risk_amt)}</div><div style="font-size:12px;color:#888;">{risk:.1f}% risk per trade</div></div>
+    <div class="status-item"><div class="kpi-label">Account Equity</div><div class="kpi-val">{format_usd(equity)}</div><div style="font-size:12px;color:#888;">Estimated after {st.session_state.losses}/2 tracked losses</div></div>
+    <div class="status-item"><div class="kpi-label">Available Margin</div><div class="kpi-val">{format_usd(available_margin)}</div><div style="font-size:12px;color:{account_health_color};">{account_health} • Free after current risk allocation</div></div>
+    <div class="status-item"><div class="kpi-label">Total Trades Executed</div><div class="kpi-val">{trade_count}</div><div style="font-size:12px;color:#888;">BUY {buy_count} • SELL {sell_count}</div></div>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
