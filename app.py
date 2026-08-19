@@ -200,29 +200,6 @@ eur_price, eur_sig, eur20, eur100, eur_rsi, eur_atr, eur_momentum = get_forex("E
 zar_price, zar_sig, zar20, zar100, zar_rsi, zar_atr, zar_momentum = get_forex("USDZAR=X")  # SA PAIR
 dxy, dxy_chg, dxy_ema20, dxy_momentum = get_dxy()
 now = datetime.now(SAST)
-bal_usd = st.session_state.balance_usd
-risk = st.session_state.risk_pct
-rr_v = float(st.session_state.rr_label.split(":")[1])
-risk_amt = bal_usd * risk / 100
-equity = bal_usd
-available_margin = max(equity - risk_amt, 0.0)
-trade_count = len(st.session_state.trades)
-buy_count = sum(1 for trade in st.session_state.trades if trade.startswith("BUY"))
-sell_count = sum(1 for trade in st.session_state.trades if trade.startswith("SELL"))
-margin_ratio = (available_margin / equity) if equity else 0.0
-
-if st.session_state.losses >= 2 or trade_count >= 4 or risk >= 1.8 or margin_ratio < 0.98:
-    account_health = "CRITICAL"
-    account_health_color = "#ff5252"
-    account_health_bg = "rgba(255, 82, 82, 0.18)"
-elif st.session_state.losses == 1 or risk >= 1.3 or margin_ratio < 0.99:
-    account_health = "WARNING"
-    account_health_color = "#FFD54F"
-    account_health_bg = "rgba(255, 213, 79, 0.16)"
-else:
-    account_health = "HEALTHY"
-    account_health_color = "#00e676"
-    account_health_bg = "rgba(0, 230, 118, 0.16)"
 
 # HEADER SA
 st.markdown(f"""
@@ -231,25 +208,7 @@ st.markdown(f"""
 <div style="text-align:right;"><span style="color:#FFD700;font-weight:700;">{now.strftime('%H:%M:%S')}</span> SAST<br><span style="font-size:11px;color:#00e676;">● RAND SMART ACTIVE</span></div>
 </div>
 """, unsafe_allow_html=True)
-
-st.markdown(f"""
-<div class="glass" style="margin-top:16px;">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-<div>
-<div class="kpi-label">ACCOUNT TOTALS STATUS</div>
-<div style="font-size:13px;color:#999;">Live USD overview synced to balance, risk and trade activity</div>
-</div>
-<div class="status-pill" style="background:{account_health_bg};color:{account_health_color};border:1px solid {account_health_color};">{account_health}</div>
-</div>
-<div class="status-grid">
-<div class="status-item"><div class="kpi-label">Total Account Balance</div><div class="kpi-val">{format_usd(bal_usd)}</div><div style="font-size:12px;color:#888;">Cash balance in USD</div></div>
-<div class="status-item"><div class="kpi-label">Risk Amount</div><div class="kpi-val">{format_usd(risk_amt)}</div><div style="font-size:12px;color:#888;">{risk:.1f}% risk per trade</div></div>
-<div class="status-item"><div class="kpi-label">Account Equity</div><div class="kpi-val">{format_usd(equity)}</div><div style="font-size:12px;color:#888;">Live equity view in USD</div></div>
-<div class="status-item"><div class="kpi-label">Available Margin</div><div class="kpi-val">{format_usd(available_margin)}</div><div style="font-size:12px;color:{account_health_color};">{account_health} • Free after current risk allocation</div></div>
-<div class="status-item"><div class="kpi-label">Total Trades Executed</div><div class="kpi-val">{trade_count}</div><div style="font-size:12px;color:#888;">BUY {buy_count} • SELL {sell_count}</div></div>
-</div>
-</div>
-""", unsafe_allow_html=True)
+account_status_container = st.container()
 
 k1,k2,k3,k4,k5 = st.columns(5)
 k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div class="kpi-val">${price:,.2f}</div><div style="font-size:12px;color:#888;">{ema50:.0f}/{ema200:.0f} | RSI {gold_rsi:.0f}</div></div>', unsafe_allow_html=True)
@@ -339,7 +298,7 @@ with left:
     if len(st.session_state.trades)>=4:
         st.markdown(f'<div class="locked"><h3>🔒 SA PORTFOLIO LOCKED 4/4</h3><p>{", ".join(st.session_state.trades)}</p></div>', unsafe_allow_html=True)
     elif agree_buy:
-        sl, tp = calculate_levels(price, atr, True, rr_v if "rr_v" in locals() else 2.5)
+        sl, tp = calculate_levels(price, atr, True, float(st.session_state.rr_label.split(":")[1]))
         badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE BUY - SA EDITION"):
@@ -347,7 +306,7 @@ with left:
             send_alert(f"⚔️ *SA EDITION EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
             st.rerun()
     elif agree_sell:
-        sl, tp = calculate_levels(price, atr, False, rr_v if "rr_v" in locals() else 2.5)
+        sl, tp = calculate_levels(price, atr, False, float(st.session_state.rr_label.split(":")[1]))
         badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE SELL - SA EDITION"):
@@ -411,3 +370,43 @@ with right:
         for trade in reversed(st.session_state.trade_history[-5:]):  # Show last 5 trades
             st.markdown(f'<div style="background:#111;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+buy_count = sum(1 for trade in st.session_state.trades if trade.startswith("BUY"))
+sell_count = sum(1 for trade in st.session_state.trades if trade.startswith("SELL"))
+trade_count = buy_count + sell_count
+risk_amt = bal_usd * risk / 100
+equity = max(bal_usd - (st.session_state.losses * risk_amt), 0.0)
+available_margin = max(equity - risk_amt, 0.0)
+
+if st.session_state.losses >= 2 or trade_count >= 4 or risk >= 1.8:
+    account_health = "CRITICAL"
+    account_health_color = "#ff5252"
+    account_health_bg = "rgba(255, 82, 82, 0.18)"
+elif st.session_state.losses == 1 or risk >= 1.3:
+    account_health = "WARNING"
+    account_health_color = "#FFD54F"
+    account_health_bg = "rgba(255, 213, 79, 0.16)"
+else:
+    account_health = "HEALTHY"
+    account_health_color = "#00e676"
+    account_health_bg = "rgba(0, 230, 118, 0.16)"
+
+with account_status_container:
+    st.markdown(f"""
+    <div class="glass" style="margin-top:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+    <div class="kpi-label">ACCOUNT TOTALS STATUS</div>
+    <div style="font-size:13px;color:#999;">Live USD overview synced to balance, risk and trade activity</div>
+    </div>
+    <div class="status-pill" style="background:{account_health_bg};color:{account_health_color};border:1px solid {account_health_color};">{account_health}</div>
+    </div>
+    <div class="status-grid">
+    <div class="status-item"><div class="kpi-label">Total Account Balance</div><div class="kpi-val">{format_usd(bal_usd)}</div><div style="font-size:12px;color:#888;">Cash balance in USD</div></div>
+    <div class="status-item"><div class="kpi-label">Risk Amount</div><div class="kpi-val">{format_usd(risk_amt)}</div><div style="font-size:12px;color:#888;">{risk:.1f}% risk per trade</div></div>
+    <div class="status-item"><div class="kpi-label">Account Equity</div><div class="kpi-val">{format_usd(equity)}</div><div style="font-size:12px;color:#888;">Estimated after {st.session_state.losses}/2 tracked losses</div></div>
+    <div class="status-item"><div class="kpi-label">Available Margin</div><div class="kpi-val">{format_usd(available_margin)}</div><div style="font-size:12px;color:{account_health_color};">{account_health} • Free after current risk allocation</div></div>
+    <div class="status-item"><div class="kpi-label">Total Trades Executed</div><div class="kpi-val">{trade_count}</div><div style="font-size:12px;color:#888;">BUY {buy_count} • SELL {sell_count}</div></div>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
