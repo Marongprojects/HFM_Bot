@@ -385,6 +385,10 @@ def calculate_levels(price, atr, agree_buy, rr_v):
     tp = price + (abs(price-sl) * rr_v) if agree_buy else price - (abs(sl-price) * rr_v)
     return sl, tp
 
+def calc_lots(bal_usd: float, risk_pct: float, atr: float) -> float:
+    """Calculate position size in lots based on balance, risk %, and ATR."""
+    return max(0.01, min((bal_usd * risk_pct / 100) / ((atr * 1.5) * 10), 2.0))
+
 def check_trade_outcome(current_price, sl, tp, direction):
     """
     Check if trade hit SL (loss) or TP (win)
@@ -592,18 +596,17 @@ with left:
         sl, tp = calculate_levels(price, atr, True, rr_v if "rr_v" in locals() else 2.5)
         badge = "HIGH CONVICTION" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
+        _lots = calc_lots(bal_usd if "bal_usd" in locals() else 500.0, risk if "risk" in locals() else 1.0, atr)
         if _MT5_ENABLED:
-            lots_val = max(0.01, min((bal_usd * (risk/100)) / ((atr*1.5)*10) if "bal_usd" in locals() else 0.01, 2.0))
-            st.caption(f"🔗 MT5 Bridge active — will place {lots_val:.2f} lot BUY on execution")
+            st.caption(f"🔗 MT5 Bridge active — will place {_lots:.2f} lot BUY on execution")
         if st.button("✅ EXECUTE BUY"):
             st.session_state.trades.append(f"BUY {now.strftime('%H:%M')} {price:.2f} {conf}%")
             send_alert(f"⚔️ *SIGNAL EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 trades")
             if _MT5_ENABLED:
-                lots_exec = max(0.01, min((bal_usd * (risk/100)) / ((atr*1.5)*10) if "bal_usd" in locals() else 0.01, 2.0))
-                mt5_result = mt5_place_order("BUY", lots_exec, sl, tp)
+                mt5_result = mt5_place_order("BUY", _lots, sl, tp)
                 if mt5_result and mt5_result.get("success"):
                     ticket = mt5_result.get("ticket", "?")
-                    send_alert(f"✅ *MT5 ORDER PLACED* ticket #{ticket}\nBUY {lots_exec:.2f} lots @ {mt5_result.get('price', price):.2f}")
+                    send_alert(f"✅ *MT5 ORDER PLACED* ticket #{ticket}\nBUY {_lots:.2f} lots @ {mt5_result.get('price', price):.2f}")
                 else:
                     err = (mt5_result or {}).get("error", "unknown error")
                     send_alert(f"⚠️ *MT5 ORDER FAILED*\n{err}")
@@ -612,18 +615,17 @@ with left:
         sl, tp = calculate_levels(price, atr, False, rr_v if "rr_v" in locals() else 2.5)
         badge = "HIGH CONVICTION" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
+        _lots = calc_lots(bal_usd if "bal_usd" in locals() else 500.0, risk if "risk" in locals() else 1.0, atr)
         if _MT5_ENABLED:
-            lots_val = max(0.01, min((bal_usd * (risk/100)) / ((atr*1.5)*10) if "bal_usd" in locals() else 0.01, 2.0))
-            st.caption(f"🔗 MT5 Bridge active — will place {lots_val:.2f} lot SELL on execution")
+            st.caption(f"🔗 MT5 Bridge active — will place {_lots:.2f} lot SELL on execution")
         if st.button("✅ EXECUTE SELL"):
             st.session_state.trades.append(f"SELL {now.strftime('%H:%M')} {price:.2f} {conf}%")
             send_alert(f"⚔️ *SIGNAL EXECUTED*\n🔴 SELL XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 trades")
             if _MT5_ENABLED:
-                lots_exec = max(0.01, min((bal_usd * (risk/100)) / ((atr*1.5)*10) if "bal_usd" in locals() else 0.01, 2.0))
-                mt5_result = mt5_place_order("SELL", lots_exec, sl, tp)
+                mt5_result = mt5_place_order("SELL", _lots, sl, tp)
                 if mt5_result and mt5_result.get("success"):
                     ticket = mt5_result.get("ticket", "?")
-                    send_alert(f"✅ *MT5 ORDER PLACED* ticket #{ticket}\nSELL {lots_exec:.2f} lots @ {mt5_result.get('price', price):.2f}")
+                    send_alert(f"✅ *MT5 ORDER PLACED* ticket #{ticket}\nSELL {_lots:.2f} lots @ {mt5_result.get('price', price):.2f}")
                 else:
                     err = (mt5_result or {}).get("error", "unknown error")
                     send_alert(f"⚠️ *MT5 ORDER FAILED*\n{err}")
@@ -658,12 +660,6 @@ with right:
     # Auto position-outcome check via MT5 bridge
     if _MT5_ENABLED and st.session_state.trades:
         open_pos = mt5_open_positions("XAUUSD")
-        open_tickets = {str(p.get("ticket")) for p in open_pos}
-        # Check tracked trades for SL/TP hits by looking at profit of open positions
-        for pos in open_pos:
-            current_profit = pos.get("profit", 0)
-            if current_profit <= -(abs(pos.get("open_price", price) - pos.get("sl", price)) * 10 * 0.9):
-                pass  # Still open but approaching SL — no action needed here
         if open_pos:
             pos_lines = "".join([
                 f'<div style="background:#000;padding:6px;border-radius:6px;margin:3px 0;font-size:10px;border:1px solid #555;">'
@@ -673,7 +669,7 @@ with right:
                 for p in open_pos
             ])
             st.markdown(f'<div style="margin-top:8px;"><div class="kpi-label">📡 MT5 LIVE POSITIONS</div>{pos_lines}</div>', unsafe_allow_html=True)
-        elif st.session_state.trades:
+        else:
             st.markdown('<div style="font-size:10px;color:#888;margin-top:6px;">MT5: No open positions</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)

@@ -54,7 +54,8 @@ from flask import Flask, request, jsonify
 # ---------------------------------------------------------------------------
 # Configuration — override via environment variables
 # ---------------------------------------------------------------------------
-BRIDGE_TOKEN = os.environ.get("MT5_BRIDGE_TOKEN", "change-me-to-a-strong-secret")
+_DEFAULT_TOKEN = "change-me-to-a-strong-secret"
+BRIDGE_TOKEN = os.environ.get("MT5_BRIDGE_TOKEN", _DEFAULT_TOKEN)
 MT5_LOGIN    = int(os.environ.get("MT5_LOGIN", "0"))      # set your account login
 MT5_PASSWORD = os.environ.get("MT5_PASSWORD", "")
 MT5_SERVER   = os.environ.get("MT5_SERVER", "")           # e.g. "HFM-Demo"
@@ -294,6 +295,12 @@ def close_positions():
 # Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    if BRIDGE_TOKEN == _DEFAULT_TOKEN:
+        log.critical(
+            "BRIDGE_TOKEN is still set to the default insecure value. "
+            "Set the MT5_BRIDGE_TOKEN environment variable before running in production."
+        )
+        raise SystemExit(1)
     log.info("Starting MT5 Bridge on %s:%s", HOST, PORT)
     if _MT5_AVAILABLE:
         if _ensure_connected():
