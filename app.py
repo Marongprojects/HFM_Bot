@@ -138,4 +138,15 @@ with right:
     # Bloomberg
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">BLOOMBERG LIVE FEED</div>', unsafe_allow_html=True)
     for title, link in news:
-        st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin
+        st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:6px 0;border-left:3px solid #FFD700;font-size:12px;">📰 {title}<br><a href="{link}" target="_blank" style="color:#666;font-size:10px;">{link[:45]}...</a></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Journal
+    st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">TODAY JOURNAL - {}/2</div>'.format(len(st.session_state.trades)), unsafe_allow_html=True)
+    if st.session_state.trades:
+        for i,t in enumerate(st.session_state.trades,1): st.markdown(f'<div style="background:#111;padding:8px;border-radius:6px;margin:4px 0;font-size:12px;">{i}. {t}</div>', unsafe_allow_html=True)
+    else: st.caption("No trades today - Discipline = Profit")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+if st.button("🔄 REFRESH TERMINAL"):
+    st.cache_data.clear(); st.rerun()
