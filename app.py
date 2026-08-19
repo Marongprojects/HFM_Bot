@@ -23,7 +23,7 @@ st.markdown("""
 .sell-signal { background: linear-gradient(135deg, #ff1744, #ff5252); color: white; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 22px; }
 .wait-signal { background: #16161a; border: 2px dashed #333; border-radius: 16px; padding: 24px; text-align: center; }
 .locked { background: linear-gradient(135deg, #2a0a0a, #1a0a0a); border: 1px solid #ff1744; border-radius: 16px; padding: 20px; text-align: center; }
-.killswitch { background: linear-gradient(135deg, #8b0000, #ff0000); border: 2px solid #ff1744; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 18px; color: white; animation: pulse 1s infinite; }
+.killswitch { background: linear-gradient(135deg, #8b0000, #ff0000); border: 2px solid #ff1744; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 18px; color: wh[...]
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 .conf-high { background: linear-gradient(90deg,#00c853,#00e676); color:black; padding:8px 14px; border-radius:20px; font-weight:900; }
 .conf-mid { background: #333; color:#FFD700; padding:8px 14px; border-radius:20px; font-weight:900; border:1px solid #FFD700; }
@@ -35,6 +35,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if "trades" not in st.session_state: st.session_state.trades=[]
+if "trade_history" not in st.session_state: st.session_state.trade_history = []
 if "losses" not in st.session_state: st.session_state.losses = 0
 if "last_reset" not in st.session_state: st.session_state.last_reset=datetime.now(SAST).date()
 if datetime.now(SAST).date()!=st.session_state.last_reset:
@@ -142,6 +143,47 @@ def calculate_levels(price, atr, agree_buy, rr_v):
     sl = price - atr*1.5 if agree_buy else price + atr*1.5
     tp = price + (abs(price-sl) * rr_v) if agree_buy else price - (abs(sl-price) * rr_v)
     return sl, tp
+
+def check_trade_outcome(current_price, sl, tp, direction):
+    """
+    Check if trade hit SL (loss) or TP (win)
+    direction: "BUY" or "SELL"
+    Returns: "WIN", "LOSS", or None (still open)
+    """
+    if direction == "BUY":
+        if current_price <= sl:
+            return "LOSS"
+        elif current_price >= tp:
+            return "WIN"
+    else:  # SELL
+        if current_price >= sl:
+            return "LOSS"
+        elif current_price <= tp:
+            return "WIN"
+    return None
+
+def record_trade_outcome(direction, entry, sl, tp, outcome, conf):
+    """Record trade outcome and update loss counter"""
+    timestamp = datetime.now(SAST).strftime("%H:%M:%S")
+    
+    if outcome == "LOSS":
+        st.session_state.losses += 1
+        trade_record = f"❌ {direction} @ {entry:.2f} | SL HIT | Loss {st.session_state.losses}/2 | CONF {conf}%"
+        send_alert(f"❌ *TRADE CLOSED - LOSS*\n{direction} XAUUSD @ {entry:.2f}\nSL {sl:.2f} | TP {tp:.2f}\nLoss recorded: {st.session_state.losses}/2\nCONF {conf}%")
+        
+        if st.session_state.losses >= 2:
+            send_alert(f"🔒 *KILL-SWITCH TRIGGERED!*\n2 consecutive losses - Trading disabled for today.")
+    else:  # WIN
+        st.session_state.losses = 0  # Reset loss counter on win
+        trade_record = f"✅ {direction} @ {entry:.2f} | TP HIT | WIN! | Losses reset to 0 | CONF {conf}%"
+        send_alert(f"✅ *TRADE CLOSED - WIN*\n{direction} XAUUSD @ {entry:.2f}\nTP {tp:.2f}\nLoss counter reset to 0!\nCONF {conf}%")
+    
+    st.session_state.trade_history.append({
+        "timestamp": timestamp,
+        "record": trade_record
+    })
+    
+    return trade_record
 
 # DATA COLLECTION
 df_gold, price, atr, ema50, ema200, gold_rsi, gold_macd, gold_momentum, gold_volatility = get_gold()
@@ -287,14 +329,33 @@ with right:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">⚠️ LOSS TRACKER</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
-    if st.button("📊 Log Loss"):
-        st.session_state.losses += 1
-        send_alert(f"⚠️ Loss recorded: {st.session_state.losses}/2\n{st.session_state.losses}/2 consecutive losses.")
-        if st.session_state.losses >= 2:
-            send_alert(f"🔒 KILL-SWITCH TRIGGERED!\n2 consecutive losses - Trading disabled for today.")
-        st.rerun()
-    if st.button("✅ Reset Losses"):
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("❌ Log Loss"):
+            # Example: if trade outcome was a loss
+            st.session_state.losses += 1
+            send_alert(f"⚠️ Loss recorded: {st.session_state.losses}/2\n{st.session_state.losses}/2 consecutive losses.")
+            if st.session_state.losses >= 2:
+                send_alert(f"🔒 KILL-SWITCH TRIGGERED!\n2 consecutive losses - Trading disabled for today.")
+            st.rerun()
+    with col2:
+        if st.button("✅ Log Win"):
+            # Example: if trade outcome was a win, reset losses
+            st.session_state.losses = 0
+            send_alert(f"✅ Win recorded! Loss counter reset to 0.")
+            st.rerun()
+    
+    if st.button("🔄 Reset Losses"):
         st.session_state.losses = 0
-        send_alert(f"✅ Loss counter reset to 0.")
+        send_alert(f"🔄 Loss counter manually reset to 0.")
         st.rerun()
+    
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Trade History
+    if st.session_state.trade_history:
+        st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">📝 TRADE HISTORY</div>', unsafe_allow_html=True)
+        for trade in reversed(st.session_state.trade_history[-5:]):  # Show last 5 trades
+            st.markdown(f'<div style="background:#111;padding:8px;border-radius:6px;margin:5px 0;font-size:10px;">{trade["timestamp"]} | {trade["record"]}</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
