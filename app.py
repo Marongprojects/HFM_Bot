@@ -405,12 +405,12 @@ def send_alert(msg):
 
 STOIC_QUOTES = [
     "The obstacle is the way. — Marcus Aurelius",
-    "You have power over your mind, not outside events. Realise this, and you will find strength.",
-    "Waste no more time arguing what a good trader should be. Be one.",
-    "He who is brave is free. Trade with conviction, not fear.",
-    "First say to yourself what you would be; and then do what you have to do.",
-    "Difficulty is what wakes up the genius. — Nassim Taleb",
-    "Discipline is the bridge between goals and accomplishment.",
+    "You have power over your mind, not outside events. Realize this, and you will find strength. — Marcus Aurelius",
+    "Waste no more time arguing what a good trader should be. Be one. — Marcus Aurelius",
+    "He who is brave is free. Trade with conviction, not fear. — Seneca",
+    "First say to yourself what you would be; and then do what you have to do. — Epictetus",
+    "It is not the man who has little, but the man who craves more, that is poor. — Seneca",
+    "Difficulties strengthen the mind, as labour does the body. — Seneca",
     "A smooth sea never made a skilled sailor — nor a skilled trader.",
 ]
 
@@ -577,7 +577,7 @@ k4.markdown(f'''<div class="kpi">
   <div class="kpi-sub">MOM {dxy_momentum:+.2f}</div>
 </div>''', unsafe_allow_html=True)
 
-losses_pct_class = ["loss-0","loss-25","loss-50","loss-75","loss-100","loss-100"][min(st.session_state.losses, 4)+1 if st.session_state.losses > 0 else 0]
+losses_pct_class = ["loss-0","loss-25","loss-50","loss-75","loss-100","loss-100"][min(st.session_state.losses, 5)]
 losses_color = "#ff1744" if st.session_state.losses >= 2 else "#FFD700" if st.session_state.losses == 1 else "#00e676"
 k5.markdown(f'''<div class="kpi" style="border-top-color:rgba(255,23,68,0.6);">
   <div class="kpi-label">DISCIPLINE</div>
