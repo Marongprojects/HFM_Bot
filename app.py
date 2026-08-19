@@ -23,6 +23,8 @@ st.markdown("""
 .sell-signal { background: linear-gradient(135deg, #ff1744, #ff5252); color: white; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 22px; }
 .wait-signal { background: #16161a; border: 2px dashed #333; border-radius: 16px; padding: 24px; text-align: center; }
 .locked { background: linear-gradient(135deg, #2a0a0a, #1a0a0a); border: 1px solid #ff1744; border-radius: 16px; padding: 20px; text-align: center; }
+.killswitch { background: linear-gradient(135deg, #8b0000, #ff0000); border: 2px solid #ff1744; border-radius: 16px; padding: 24px; text-align: center; font-weight: 900; font-size: 18px; color: white; animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 .conf-high { background: linear-gradient(90deg,#00c853,#00e676); color:black; padding:8px 14px; border-radius:20px; font-weight:900; }
 .conf-mid { background: #333; color:#FFD700; padding:8px 14px; border-radius:20px; font-weight:900; border:1px solid #FFD700; }
 .conf-low { background: #222; color:#888; padding:8px 14px; border-radius:20px; }
@@ -33,9 +35,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if "trades" not in st.session_state: st.session_state.trades=[]
+if "losses" not in st.session_state: st.session_state.losses = 0
 if "last_reset" not in st.session_state: st.session_state.last_reset=datetime.now(SAST).date()
 if datetime.now(SAST).date()!=st.session_state.last_reset:
-    st.session_state.trades=[]; st.session_state.last_reset=datetime.now(SAST).date()
+    st.session_state.trades=[]; st.session_state.losses = 0; st.session_state.last_reset=datetime.now(SAST).date()
 
 @st.cache_data(ttl=60)
 def get_gold():
@@ -134,6 +137,12 @@ def get_conf_breakdown(conf, base, eur_add, eur_mom, zar_add, zar_mom, vol_adj):
     </div>
     """
 
+def calculate_levels(price, atr, agree_buy, rr_v):
+    """Calculate SL & TP based on direction and RR"""
+    sl = price - atr*1.5 if agree_buy else price + atr*1.5
+    tp = price + (abs(price-sl) * rr_v) if agree_buy else price - (abs(sl-price) * rr_v)
+    return sl, tp
+
 # DATA COLLECTION
 df_gold, price, atr, ema50, ema200, gold_rsi, gold_macd, gold_momentum, gold_volatility = get_gold()
 eur_price, eur_sig, eur20, eur100, eur_rsi, eur_atr, eur_momentum = get_forex("EURUSD=X")
@@ -154,7 +163,7 @@ k1.markdown(f'<div class="kpi"><div class="kpi-label">XAUUSD CORE</div><div clas
 k2.markdown(f'<div class="kpi"><div class="kpi-label">EURUSD CONFIRM</div><div class="kpi-val">{eur_price:.5f}</div><div style="font-size:12px;color:{"#00e676" if eur_sig=="BUY" else "#ff5252" if eur_sig=="SELL" else "#999"};">{eur_sig} | RSI {eur_rsi:.0f}</div></div>', unsafe_allow_html=True)
 k3.markdown(f'<div class="kpi"><div class="kpi-label">USDZAR HOME 🇿🇦</div><div class="kpi-val">R{zar_price:.4f}</div><div style="font-size:12px;color:{"#00e676" if zar_sig=="SELL" else "#ff5252" if zar_sig=="BUY" else "#999"};">{zar_sig} | RSI {zar_rsi:.0f}</div></div>', unsafe_allow_html=True)
 k4.markdown(f'<div class="kpi"><div class="kpi-label">DXY FUND</div><div class="kpi-val">{dxy:.2f}</div><div style="font-size:12px;color:{"#00e676" if dxy_chg<0 else "#ff5252"}>{dxy_chg:+.2f}% | MOM {dxy_momentum:+.1f}</div></div>', unsafe_allow_html=True)
-k5.markdown(f'<div class="kpi"><div class="kpi-label">DISCIPLINE</div><div class="kpi-val">{len(st.session_state.trades)}/4</div><div style="font-size:12px;color:{"#ff5252" if len(st.session_state.trades)>=4 else "#00e676"};">Portfolio: {"FULL" if len(st.session_state.trades)>=4 else "ACTIVE"}</div></div>', unsafe_allow_html=True)
+k5.markdown(f'<div class="kpi"><div class="kpi-label">LOSSES</div><div class="kpi-val">{st.session_state.losses}/2</div><div style="font-size:12px;color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};">{"🔒 KILL-SWITCH" if st.session_state.losses >= 2 else "Status OK"}</div></div>', unsafe_allow_html=True)
 
 # ENHANCED CORE LOGIC
 setup_bull = ema50>ema200 and price>ema50 and gold_rsi < 70 and gold_macd > 0
@@ -180,6 +189,16 @@ conf = min(int(base_conf + eur_signal_bonus + eur_momentum_bonus + zar_signal_bo
 # Enhanced confidence label with new function
 conf_label = get_conf_label(conf)
 conf_breakdown = get_conf_breakdown(conf, base_conf, eur_signal_bonus, eur_momentum_bonus, zar_signal_bonus, zar_momentum_bonus, vol_adjustment)
+
+# KILL-SWITCH CHECK
+if st.session_state.losses >= 2:
+    st.markdown(f"""
+    <div class="killswitch">
+    🚨 KILL-SWITCH ACTIVATED 🚨<br>
+    <span style="font-size:14px;">2/2 Consecutive Losses Recorded<br>TRADING DISABLED FOR TODAY</span>
+    </div>
+    """, unsafe_allow_html=True)
+    st.stop()
 
 left, right = st.columns([1.7,1])
 with left:
@@ -227,7 +246,7 @@ with left:
     if len(st.session_state.trades)>=4:
         st.markdown(f'<div class="locked"><h3>🔒 SA PORTFOLIO LOCKED 4/4</h3><p>{", ".join(st.session_state.trades)}</p></div>', unsafe_allow_html=True)
     elif agree_buy:
-        sl=price-atr*1.5; tp=price+(abs(price-sl)*2.5)
+        sl, tp = calculate_levels(price, atr, True, rr_v if "rr_v" in locals() else 2.5)
         badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="buy-signal">🟢 ELITE BUY - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE BUY - SA EDITION"):
@@ -235,7 +254,7 @@ with left:
             send_alert(f"⚔️ *SA EDITION EXECUTED*\n🟢 BUY XAUUSD {price:.2f}\nSL {sl:.2f} TP {tp:.2f}\nCONF {conf}% EUR:{eur_sig} USDZAR:{zar_sig} R{zar_price:.4f}\n{len(st.session_state.trades)}/4 TRADES")
             st.rerun()
     elif agree_sell:
-        sl=price+atr*1.5; tp=price-(abs(sl-price)*2.5)
+        sl, tp = calculate_levels(price, atr, False, rr_v if "rr_v" in locals() else 2.5)
         badge = "HIGH CONVICTION 🇿🇦" if conf>=75 else "MEDIUM"
         st.markdown(f'<div class="sell-signal">🔴 ELITE SELL - {badge}<br><span style="font-size:13px;">{price:.2f} SL {sl:.2f} TP {tp:.2f} | {conf}% CONF | ZAR {zar_price:.4f}</span></div>', unsafe_allow_html=True)
         if st.button("✅ EXECUTE SELL - SA EDITION"):
@@ -265,4 +284,17 @@ with right:
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">Gold RSI: {gold_rsi:.1f} {"⚡ Overbought" if gold_rsi>70 else "⚠️ Oversold" if gold_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">EUR RSI: {eur_rsi:.1f} {"⚡ Overbought" if eur_rsi>70 else "⚠️ Oversold" if eur_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
     st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">ZAR RSI: {zar_rsi:.1f} {"⚡ Overbought" if zar_rsi>70 else "⚠️ Oversold" if zar_rsi<30 else "✅ Neutral"}</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass" style="margin-top:15px;"><div class="kpi-label">⚠️ LOSS TRACKER</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:#111;padding:10px;border-radius:8px;margin:5px 0;">Consecutive Losses: <span style="color:{"#ff1744" if st.session_state.losses >= 2 else "#00e676"};font-weight:bold;">{st.session_state.losses}/2</span></div>', unsafe_allow_html=True)
+    if st.button("📊 Log Loss"):
+        st.session_state.losses += 1
+        send_alert(f"⚠️ Loss recorded: {st.session_state.losses}/2\n{st.session_state.losses}/2 consecutive losses.")
+        if st.session_state.losses >= 2:
+            send_alert(f"🔒 KILL-SWITCH TRIGGERED!\n2 consecutive losses - Trading disabled for today.")
+        st.rerun()
+    if st.button("✅ Reset Losses"):
+        st.session_state.losses = 0
+        send_alert(f"✅ Loss counter reset to 0.")
+        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
