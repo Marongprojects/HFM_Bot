@@ -3,10 +3,13 @@ import pytz
 from datetime import datetime
 import time
 
+# Page setup
 st.set_page_config(page_title="STOIC HFM", page_icon="⚔️", layout="wide")
 
+# Timezone
 SAST = pytz.timezone("Africa/Johannesburg")
 
+# Custom CSS styling
 st.markdown("""
 <style>
 .stApp { background-color: #0A0A0B; }
@@ -19,6 +22,7 @@ div[data-testid="metric-container"] {
 </style>
 """, unsafe_allow_html=True)
 
+# Title
 st.title("⚔️ STOIC HFM LIVE")
 
 # Live clock (updates every second)
@@ -28,8 +32,9 @@ while True:
     time.sleep(1)
 
 # Metrics
-st.metric("GOLD", "$ 4,391.50", "LIVE")
-st.success("✅ APP FIXED - READY")
+col1, col2 = st.columns(2)
+col1.metric("GOLD", "$ 4,391.50", "LIVE")
+col2.success("✅ APP FIXED - READY")
 
 # User's Edge browser tabs metadata
 edge_all_open_tabs = [
